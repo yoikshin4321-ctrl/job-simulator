@@ -27,22 +27,22 @@ const SIMULATION_LEVELS = {
         title: 'Level 1 · 자주 묻는 질문 정리',
         background: '고객센터 문의 분석 결과, "배송", "반품", "결제" 관련 문의가 상위를 차지합니다. 개발 리소스는 아직 투입 전입니다.',
         task: '고객 문의 중 자주 묻는 질문(FAQ) 유형을 3가지 정리하고, 각 유형에 대한 대응 방안을 1문단씩 제안해 주세요.',
-        feedback: '질문 유형을 비즈니스 관점으로 잘 분류했습니다. 다음 단계에서는 구체적인 우선순위 근거(빈도, 고객 임팩트, 해결 난이도)를 수치적으로 비교해 보세요.',
-        proTip: '우선순위를 정할 땐 "고객 가치"와 "개발 공수" 두 축으로 2x2 매트릭스를 그려보면 설득력이 높아집니다.',
+        goodPoints: '질문 유형을 비즈니스 관점으로 잘 분류했고, 각 유형별 대응 방안도 실무에 적용 가능한 수준으로 제시했습니다.',
+        nextFocus: '다음 단계에서는 구체적인 우선순위 근거(빈도, 고객 임팩트, 해결 난이도)를 수치적으로 비교해 보세요. "고객 가치"와 "개발 공수" 2x2 매트릭스로 설득력을 높일 수 있습니다.',
       },
       {
         title: 'Level 2 · 채팅 기능 도입 우선순위',
         background: 'FAQ 분석을 바탕으로 채팅봇 도입이 검토됩니다. 예산과 인력이 제한되어 한 번에 하나의 기능만 우선 도입할 수 있습니다.',
         task: '채팅봇 우선 도입 대상을 1개 선정하고, 선택 이유와 기대 효과를 데이터·비즈니스 관점에서 정당화해 주세요.',
-        feedback: '선택 근거를 논리적으로 제시했습니다. MVP 백로그 작성 시에는 각 항목별 예상 공수(스토리 포인트 또는 인일)와 스프린트 구간을 추가하면 실행 가능성이 높아집니다.',
-        proTip: '백로그 항목은 "사용자 스토리 + 수용 기준 + 예상 효과" 형태로 정리하면 개발팀과 소통이 원활합니다.',
+        goodPoints: '선택 근거를 논리적으로 제시했고, 데이터·비즈니스 관점의 정당화가 설득력 있습니다.',
+        nextFocus: 'MVP 백로그 작성 시에는 각 항목별 예상 공수(스토리 포인트 또는 인일)와 스프린트 구간을 추가하세요. "사용자 스토리 + 수용 기준 + 예상 효과" 형태로 정리하면 개발팀과 소통이 원활합니다.',
       },
       {
         title: 'Level 3 · MVP 백로그 작성',
         background: '다음 분기에 개발 인력이 투입됩니다. 여러 스테이크홀더의 요청이 쌓여 있으며, 데이터와 비즈니스 임팩트를 근거로 우선순위를 결정해야 합니다.',
         task: 'MVP 백로그 5~7개 항목을 작성해 주세요. 각 항목에 우선순위 근거, 예상 효과, 그리고 필요 시 예상 공수를 반드시 포함해 주세요.',
-        feedback: '현직자들이 중요하게 보는 "수치적 비교"가 잘 반영되었습니다. 이 역량을 기반으로 시니어 PM으로 성장할 수 있어요.',
-        proTip: '작은 프로젝트라도 처음부터 끝까지 기획하고 런칭해본 경험이 가장 큰 자산이 됩니다. 포트폴리오로 녹여보세요.',
+        goodPoints: '우선순위 근거와 수치적 비교가 잘 반영되었고, 실행 가능한 수준의 백로그입니다.',
+        nextFocus: '작은 프로젝트라도 처음부터 끝까지 기획하고 런칭해본 경험이 가장 큰 자산입니다. 이 역량을 포트폴리오로 녹여보세요.',
       },
     ],
   },
@@ -53,22 +53,22 @@ const SIMULATION_LEVELS = {
         title: 'Level 1 · 가설 수립',
         background: '커머스 서비스의 주간 결제 완료율이 전주 대비 약 10% 하락했습니다. 경영진이 원인 파악을 요청했습니다.',
         task: '결제 완료율 하락 원인에 대한 가설을 2개 수립해 주세요. 각 가설이 어떤 데이터로 검증 가능한지 간단히 적어 주세요.',
-        feedback: '가설이 측정 가능하고 검증 가능한 형태로 잘 작성되었습니다. 다음 단계에서는 비즈니스 임팩트(매출·전환 영향도)를 정량적으로 추정해 보세요.',
-        proTip: '가설은 "if-then" 형식으로 작성하면 A/B 테스트 설계에 바로 연결됩니다.',
+        goodPoints: '가설이 측정 가능하고 검증 가능한 형태로 잘 작성되었습니다. 데이터 기반 접근이 돋보입니다.',
+        nextFocus: '다음 단계에서는 비즈니스 임팩트(매출·전환 영향도)를 정량적으로 추정해 보세요. "if-then" 형식의 가설은 A/B 테스트 설계에 바로 연결됩니다.',
       },
       {
         title: 'Level 2 · 비즈니스 임팩트 및 검증',
         background: '가설 검증을 위한 데이터 수집이 가능한 상태입니다. 경영진은 "얼마나 중요한 문제인가"에 대한 답을 원합니다.',
         task: '각 가설의 비즈니스 임팩트(매출·전환 영향도)를 설명하고, 가설 검증을 위한 A/B 테스트 설계안을 제안해 주세요.',
-        feedback: '비즈니스 관점의 접근이 우수합니다. 경영진 대시보드에는 "결정에 필요한 1~2개 핵심 지표"에 집중하는 것이 효과적입니다.',
-        proTip: '숫자를 비즈니스 언어로 번역할 때는 "So What?"을 반복해 물어보세요. 인사이트가 명확해집니다.',
+        goodPoints: '비즈니스 임팩트를 잘 설명했고, A/B 테스트 설계도 검증 가능한 형태입니다.',
+        nextFocus: '대시보드 기획 시 "결정에 필요한 1~2개 핵심 지표"에 집중하세요. "So What?"을 반복해 물어보면 인사이트가 명확해집니다.',
       },
       {
         title: 'Level 3 · 대시보드 기획',
         background: '가설 검증 결과가 나왔고, 경영진은 지속적인 모니터링을 위한 대시보드를 요청했습니다.',
         task: '경영진용 핵심 지표 대시보드에 포함할 KPI 5개 이상과 데이터 소스를 제안해 주세요. 각 KPI의 정의와 목적을 명시해 주세요.',
-        feedback: '데이터 애널리스트로서 "숫자 뒤의 행동"을 증명하는 역량이 잘 드러났습니다. 실제 비즈니스 데이터 포트폴리오를 만들어 보세요.',
-        proTip: '실제 비즈니스 데이터로 가설을 세우고 분석해본 경험이 면접에서 강력한 무기가 됩니다.',
+        goodPoints: '"숫자 뒤의 행동"을 증명하는 역량이 잘 드러났고, KPI 정의와 목적이 명확합니다.',
+        nextFocus: '실제 비즈니스 데이터로 가설을 세우고 분석해본 경험이 면접에서 강력한 무기가 됩니다. 포트폴리오로 녹여보세요.',
       },
     ],
   },
@@ -79,22 +79,22 @@ const SIMULATION_LEVELS = {
         title: 'Level 1 · 페르소나 정의',
         background: '20대 대학생을 타겟으로 무선 이어폰 신제품이 다음 달 런칭됩니다. 제한된 예산으로 타겟팅이 중요합니다.',
         task: '20대 대학생 타겟 페르소나를 1명 정의해 주세요. 인구통계적 특성, 니즈, 구매 저해 요인을 포함해 주세요.',
-        feedback: '페르소나가 구체적이라 메시징 방향이 명확합니다. 다음 단계에서는 이 페르소나에 맞는 카피 톤과 채널 특성을 연결해 보세요.',
-        proTip: '페르소나의 "하루 일과"를 그려보면 메시지가 들어갈 순간(시점·장소)을 찾기 쉽습니다.',
+        goodPoints: '페르소나가 구체적이라 메시징 방향이 명확하고, 인구통계·니즈·저해요인이 균형 있게 다뤄졌습니다.',
+        nextFocus: '다음 단계에서는 이 페르소나에 맞는 카피 톤과 채널 특성을 연결해 보세요. "하루 일과"를 그리면 메시지가 들어갈 순간을 찾기 쉽습니다.',
       },
       {
         title: 'Level 2 · 채널별 카피 기획',
         background: '인스타그램·유튜브·검색광고 채널을 활용할 예정입니다. 채널별 특성에 맞는 메시지가 필요합니다.',
         task: '위 페르소나에 맞는 인스타그램, 유튜브, 검색광고 각 채널별 광고 카피 1안씩 기획해 주세요. 채널 특성을 반영한 차별화된 메시지를 제안해 주세요.',
-        feedback: '채널별 톤앤매너 차별화가 잘 되었습니다. 마지막 단계에서는 각 카피의 성과를 어떻게 측정할지 지표를 포함해 주세요.',
-        proTip: '카피는 "문제 인식 → 해결 제안 → 행동 유도(CTA)" 구조가 전환율에 유리합니다.',
+        goodPoints: '채널별 톤앤매너 차별화가 잘 되었고, 페르소나와 채널 간 연결이 자연스럽습니다.',
+        nextFocus: '마지막 단계에서는 각 카피의 성과를 어떻게 측정할지 지표(CPA, ROAS, CTR 등)를 포함하세요. "문제 인식 → 해결 제안 → CTA" 구조가 전환율에 유리합니다.',
       },
       {
         title: 'Level 3 · 성과 측정 포함 캠페인',
         background: '캠페인 기획이 확정되었고, 성과 측정 방안이 최종 검토 중입니다. 예산 대비 효율을 증명해야 합니다.',
         task: '채널별 광고 카피 2~3안과 함께, 각 채널에서 측정할 성과 지표(CPA, ROAS, CTR 등)를 제시하고, 캠페인 성공 기준을 정의해 주세요.',
-        feedback: '데이터 기반 퍼포먼스 마케터로서의 역량이 잘 드러났습니다. 직접 광고비를 써서 캠페인을 운영해본 경험이 면접에서 강력합니다.',
-        proTip: '직접 광고비를 써서 캠페인을 운영해보고 리포트를 작성해보세요. ROI를 숫자로 말할 수 있게 됩니다.',
+        goodPoints: '성과 지표와 성공 기준이 명확하고, 데이터 기반 퍼포먼스 마케터로서의 역량이 잘 드러났습니다.',
+        nextFocus: '직접 광고비를 써서 캠페인을 운영해보고 리포트를 작성해보세요. ROI를 숫자로 말할 수 있게 되면 면접에서 강력한 무기가 됩니다.',
       },
     ],
   },
@@ -174,8 +174,8 @@ export default function SimulationDetailPage() {
         ...prev,
         {
           level: currentLevel,
-          feedback: levelData.feedback,
-          proTip: levelData.proTip,
+          goodPoints: levelData.goodPoints,
+          nextFocus: levelData.nextFocus,
           title: levelData.title,
         },
       ])
@@ -234,33 +234,30 @@ export default function SimulationDetailPage() {
           ← 시뮬레이션 목록
         </Link>
 
-        {/* 스테퍼 / 진행 바 */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
+        {/* Progress Bar - 3단계 시각화 */}
+        <div className="mb-8 p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">
               {roleData.tag}
             </span>
-            <span className="text-xs text-slate-500">
+            <span className="text-sm font-bold text-slate-700">
               Level {currentLevel} / {totalLevels}
             </span>
           </div>
-          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-indigo-600 rounded-full transition-all duration-500"
-              style={{ width: `${(currentLevel / totalLevels) * 100}%` }}
-            />
-          </div>
-          <div className="flex justify-between mt-2">
+          <div className="flex gap-1">
             {[1, 2, 3].map((step) => (
-              <span
+              <div
                 key={step}
-                className={`text-xs font-medium ${
-                  step <= currentLevel ? 'text-indigo-600' : 'text-slate-400'
+                className={`h-2 flex-1 rounded-full transition-all duration-500 ${
+                  step <= currentLevel ? 'bg-indigo-600' : 'bg-slate-200'
                 }`}
-              >
-                Lv.{step}
-              </span>
+              />
             ))}
+          </div>
+          <div className="flex justify-between mt-2 text-xs font-medium">
+            <span className={1 <= currentLevel ? 'text-indigo-600' : 'text-slate-400'}>Lv.1</span>
+            <span className={2 <= currentLevel ? 'text-indigo-600' : 'text-slate-400'}>Lv.2</span>
+            <span className={3 <= currentLevel ? 'text-indigo-600' : 'text-slate-400'}>Lv.3</span>
           </div>
         </div>
 
@@ -289,10 +286,10 @@ export default function SimulationDetailPage() {
                 {feedbackHistory.map((item, i) => (
                   <div key={i} className="border-l-2 border-indigo-200 pl-3">
                     <p className="text-xs font-semibold text-indigo-600 mb-1">{item.title}</p>
-                    <p className="text-slate-600 text-sm leading-relaxed">{item.feedback}</p>
+                    <p className="text-slate-600 text-sm leading-relaxed">{item.goodPoints}</p>
                     <p className="text-xs text-amber-700 mt-2 flex items-center gap-1">
                       <Lightbulb className="w-3 h-3 flex-shrink-0" />
-                      {item.proTip}
+                      {item.nextFocus}
                     </p>
                   </div>
                 ))}
@@ -302,23 +299,23 @@ export default function SimulationDetailPage() {
         )}
 
         {showFeedback ? (
-          /* 피드백 영역 */
+          /* AI 현직자 피드백 영역 */
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-indigo-50/50 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-indigo-600" />
-              <span className="text-sm font-bold text-[#1E293B]">AI 분석 결과 · Level {currentLevel}</span>
+              <span className="text-sm font-bold text-[#1E293B]">AI 현직자 피드백 · Level {currentLevel}</span>
             </div>
             <div className="p-6 space-y-6">
-              <div>
-                <h3 className="text-sm font-bold text-[#1E293B] mb-2">AI 분석 결과</h3>
-                <p className="text-slate-700 text-sm leading-relaxed">{levelData.feedback}</p>
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200/80">
+                <h3 className="text-sm font-bold text-emerald-800 mb-2">잘한 점</h3>
+                <p className="text-slate-700 text-sm leading-relaxed">{levelData.goodPoints}</p>
               </div>
               <div className="p-4 rounded-xl bg-amber-50 border border-amber-200/80">
                 <div className="flex items-center gap-2 mb-2">
                   <Lightbulb className="w-4 h-4 text-amber-600" />
-                  <span className="text-sm font-bold text-amber-800">현직자의 팁</span>
+                  <span className="text-sm font-bold text-amber-800">다음 단계에서 신경 써야 할 점</span>
                 </div>
-                <p className="text-slate-700 text-sm leading-relaxed">{levelData.proTip}</p>
+                <p className="text-slate-700 text-sm leading-relaxed">{levelData.nextFocus}</p>
               </div>
               <button
                 type="button"
@@ -329,7 +326,7 @@ export default function SimulationDetailPage() {
                   <>역량 리포트 확인하기</>
                 ) : (
                   <>
-                    다음 단계 도전하기
+                    다음 레벨 도전하기
                     <ChevronRight className="w-5 h-5" />
                   </>
                 )}
