@@ -14,32 +14,26 @@ import {
   MessageSquare,
   Lightbulb,
   ChevronRight,
-  Quote,
   Briefcase,
 } from 'lucide-react'
 
 const JOB_IMAGES = {
-  pm: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=600',
-  data: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600',
-  marketing: 'https://images.unsplash.com/photo-1533750516457-a7f992034fec?q=80&w=600',
+  pm: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=600&auto=format&fit=crop',
+  da: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop',
+  marketer: 'https://images.unsplash.com/photo-1533750516457-a7f992034fec?q=80&w=600&auto=format&fit=crop',
 }
 
 const CAREER_DATA = {
   pm: {
-    name: 'PM (Product Manager)',
+    name: 'PM (서비스 기획)',
     summary: '고객의 문제를 정의하고 제품의 비전을 설정합니다.',
     coreValue: '문제 정의 및 해결',
-    simulationPath: '/simulation/pm',
+    targetCompanies: '네이버, 카카오, 토스, 쿠팡 등 대규모 디지털 서비스 기업에서 제품 방향과 우선순위를 정합니다.',
     personalityFit: [
-      { label: '전략적 사고', value: 88, low: '실행', high: '전략' },
-      { label: '소통·조율', value: 85, low: '내향', high: '소통 중심' },
-      { label: '분석적 사고', value: 82, low: '직관', high: '분석' },
-      { label: '리더십', value: 78, low: '수행', high: '리드' },
-    ],
-    mainTasks: [
-      '고객 인터뷰, 데이터 분석을 통한 문제 정의',
-      '개발/디자인 팀과의 협업 및 우선순위 조정',
-      '제품 로드맵 수립 및 성과 측정',
+      { label: '전략적 사고', value: 93, low: '실행', high: '전략' },
+      { label: '소통·조율', value: 80, low: '내향', high: '소통 중심' },
+      { label: '분석적 사고', value: 75, low: '직관', high: '분석' },
+      { label: '리더십', value: 68, low: '수행', high: '리드' },
     ],
     coreSkills: [
       { name: '커뮤니케이션', desc: '개발·디자인·비즈니스와 원활한 소통과 조율' },
@@ -51,7 +45,8 @@ const CAREER_DATA = {
       teamCollaboration: 90,
       deadlinePressure: 75,
       autonomy: 70,
-      description: 'PM은 개발·디자인·비즈니스 등 다양한 팀과 밀접하게 협업합니다. 출시 일정과 마감 압박이 있으나, 전략 수립과 우선순위 결정에 대한 자율성이 높은 편입니다.',
+      description:
+        'PM은 개발·디자인·비즈니스 등 다양한 팀과 밀접하게 협업합니다. 출시 일정과 마감 압박이 있으나, 전략 수립과 우선순위 결정에 대한 자율성이 높은 편입니다.',
     },
     salaryInsight: [
       { level: '신입', min: 4000, max: 5500 },
@@ -61,31 +56,34 @@ const CAREER_DATA = {
       { level: 'C-level(CPO)', min: 15000, max: 30000 },
     ],
     careerPath: ['주니어 PM', '시니어 PM', '그룹 PM', '제품 책임자(CPO)', '스타트업 창업·공동창업'],
-    proQuote: "PM은 '제품의 미니 CEO'가 아니라, '문제를 가장 잘 정의하고 해결하는 사람'입니다. 팀원들이 목표에 집중할 수 있게 돕는 윤활유 역할이 중요해요.",
-    proTip: '작은 프로젝트라도 처음부터 끝까지 기획하고 런칭해본 경험이 가장 큰 자산이 됩니다.',
     specific: {
       title: 'PM 심층 분석',
       items: [
-        { heading: '의사결정의 복잡성', body: '제한된 리소스 안에서 무엇을 먼저 만들지 결정해야 합니다. 사용자 가치, 비즈니스 임팩트, 기술 부채, 스테이크홀더 요구를 저울질하며 우선순위를 정하는 일이 핵심입니다.' },
-        { heading: '제품 비전 수립', body: '단기 KPI뿐 아니라 1~3년 후 제품이 어떤 문제를 풀고 있을지 비전을 세우고, 로드맵으로 단계를 나누어 팀과 공유하는 역량이 필요합니다.' },
+        {
+          heading: '의사결정의 복잡성',
+          body: '제한된 리소스 안에서 무엇을 먼저 만들지 결정해야 합니다. 사용자 가치, 비즈니스 임팩트, 기술 부채, 스테이크홀더 요구를 저울질하며 우선순위를 정하는 일이 핵심입니다.',
+        },
+        {
+          heading: '제품 비전 수립',
+          body: '단기 KPI뿐 아니라 1~3년 후 제품이 어떤 문제를 풀고 있을지 비전을 세우고, 로드맵으로 단계를 나누어 팀과 공유하는 역량이 필요합니다.',
+        },
       ],
     },
+    proQuote:
+      "PM은 '제품의 미니 CEO'가 아니라, '문제를 가장 잘 정의하고 해결하는 사람'입니다. 팀원들이 목표에 집중할 수 있게 돕는 윤활유 역할이 중요해요.",
+    proTip: '작은 프로젝트라도 처음부터 끝까지 기획하고 런칭해본 경험이 가장 큰 자산이 됩니다.',
   },
-  data: {
+  da: {
     name: '데이터 애널리스트 (Data Analyst)',
     summary: '복잡한 데이터 속에서 비즈니스 인사이트를 발견합니다.',
     coreValue: '비즈니스 인사이트 도출',
-    simulationPath: '/simulation/data',
+    targetCompanies:
+      '구글, 당근마켓, 무신사, 뱅크샐러드, 삼성전자 등 데이터 드리븐 조직에서 숫자 속 신호를 찾아냅니다.',
     personalityFit: [
       { label: '분석적 사고', value: 95, low: '직관', high: '분석' },
       { label: '논리·수치 감각', value: 92, low: '정성', high: '정량' },
       { label: '비즈니스 이해도', value: 80, low: '기술', high: '비즈니스' },
       { label: '호기심·탐구', value: 88, low: '루틴', high: '탐구' },
-    ],
-    mainTasks: [
-      '데이터 추출(SQL), 정제 및 시각화(Tableau/Power BI)',
-      '비즈니스 가설 수립 및 A/B 테스트 설계·분석',
-      '경영진 의사결정 지원을 위한 리포팅',
     ],
     coreSkills: [
       { name: 'SQL·Python/R', desc: '데이터 추출·분석을 위한 핵심 도구' },
@@ -97,7 +95,8 @@ const CAREER_DATA = {
       teamCollaboration: 60,
       deadlinePressure: 70,
       autonomy: 75,
-      description: '데이터 팀 내 업무 비중이 크지만, 비즈니스팀·경영진과의 리포팅·소통이 중요합니다. 데이터 분석에 집중할 수 있는 자율성이 높은 편입니다.',
+      description:
+        '데이터 팀 내 업무 비중이 크지만, 비즈니스팀·경영진과의 리포팅·소통이 중요합니다. 데이터 분석에 집중할 수 있는 자율성이 높은 편입니다.',
     },
     salaryInsight: [
       { level: '신입', min: 3800, max: 5000 },
@@ -107,31 +106,34 @@ const CAREER_DATA = {
       { level: 'C-level(CDO)', min: 12000, max: 25000 },
     ],
     careerPath: ['주니어 애널리스트', '시니어 애널리스트', '데이터 사이언티스트', 'BI/분석 리드', 'CDO·데이터 책임자'],
-    proQuote: "단순히 숫자를 뽑는 것이 아니라, '숫자 뒤에 숨겨진 고객의 행동 원인'을 찾아내는 것이 핵심입니다. 기술적인 툴(Tool) 스킬은 기본이고, 비즈니스 언어로 소통하는 능력이 필요해요.",
-    proTip: '실제 비즈니스 데이터를 가지고 가설을 세우고 분석해본 포트폴리오를 만드세요.',
     specific: {
       title: '데이터 애널리스트 심층 분석',
       items: [
-        { heading: '수학적 모델링', body: '비즈니스 질문을 측정 가능한 가설로 바꾸고, 통계·시각화·A/B 테스트로 검증합니다. 데이터 품질과 정의를 명확히 하는 것이 정확한 인사이트의 전제입니다.' },
-        { heading: '비즈니스 가설 검증 프로세스', body: '가설 수립 → 데이터 수집·정제 → 탐색적 분석 → 시각화·리포트 → 결론 및 제안까지, 재현 가능한 파이프라인으로 일하는 것이 핵심 역량입니다.' },
+        {
+          heading: '수학적 모델링',
+          body: '비즈니스 질문을 측정 가능한 가설로 바꾸고, 통계·시각화·A/B 테스트로 검증합니다. 데이터 품질과 정의를 명확히 하는 것이 정확한 인사이트의 전제입니다.',
+        },
+        {
+          heading: '비즈니스 가설 검증 프로세스',
+          body: '가설 수립 → 데이터 수집·정제 → 탐색적 분석 → 시각화·리포트 → 결론 및 제안까지, 재현 가능한 파이프라인으로 일하는 것이 핵심 역량입니다.',
+        },
       ],
     },
+    proQuote:
+      "단순히 숫자를 뽑는 것이 아니라, '숫자 뒤에 숨겨진 고객의 행동 원인'을 찾아내는 것이 핵심입니다. 기술적인 툴(Tool) 스킬은 기본이고, 비즈니스 언어로 소통하는 능력이 필요해요.",
+    proTip: '실제 비즈니스 데이터를 가지고 가설을 세우고 분석해본 포트폴리오를 만드세요.',
   },
-  marketing: {
+  marketer: {
     name: '마케터 (Performance/Content Marketer)',
-    summary: '고객의 마음을 움직여 행동을 유도합니다.',
+    summary: '고객의 마음을 움직여 브랜드의 성장을 유도합니다.',
     coreValue: '고객 획득 및 전환',
-    simulationPath: '/simulation/marketing',
+    targetCompanies:
+      'CJ ENM, 아모레퍼시픽, 샌드박스, 오늘의집, 현대자동차 등 브랜드·콘텐츠 중심 기업에서 성과를 만듭니다.',
     personalityFit: [
       { label: '창의성', value: 88, low: '보수', high: '창의' },
-      { label: '트렌드 민감도', value: 85, low: '안정', high: '변화' },
+      { label: '트렌드 민감度', value: 85, low: '안정', high: '변화' },
       { label: '데이터 의사결정', value: 78, low: '감', high: '데이터' },
       { label: '소통·영향력', value: 82, low: '내향', high: '외향' },
-    ],
-    mainTasks: [
-      '타겟 고객 페르소나 정의 및 메세징 수립',
-      '광고 캠페인 기획/운영(FB, Google Ads 등) 및 성과 분석',
-      '콘텐츠 기획 및 전환율 최적화(CRO)',
     ],
     coreSkills: [
       { name: '퍼포먼스 마케팅 데이터 해석', desc: '전환율, ROAS 등 지표를 읽고 전략에 반영' },
@@ -143,7 +145,8 @@ const CAREER_DATA = {
       teamCollaboration: 75,
       deadlinePressure: 80,
       autonomy: 65,
-      description: '캠페인 기획·운영을 위해 다양한 부서와 협업합니다. 성과 지표에 대한 압박이 있으나, 채널·메시지에 대한 창의적 실험이 가능합니다.',
+      description:
+        '캠페인 기획·운영을 위해 다양한 부서와 협업합니다. 성과 지표에 대한 압박이 있으나, 채널·메시지에 대한 창의적 실험이 가능합니다.',
     },
     salaryInsight: [
       { level: '신입', min: 3500, max: 4800 },
@@ -153,22 +156,29 @@ const CAREER_DATA = {
       { level: 'C-level(CMO)', min: 12000, max: 25000 },
     ],
     careerPath: ['주니어 마케터', '시니어 마케터', '마케팅 매니저', '그로스/퍼포먼스 리드', 'CMO'],
-    proQuote: "마케팅은 '감'이 아니라 '데이터 기반의 의사결정 프로세스'입니다. 고객의 문제를 우리 서비스가 어떻게 해결해 주는지 명확하게 전달하고, 숫자로 증명해야 해요.",
-    proTip: '직접 광고비를 써서 캠페인을 운영해보고 리포트를 작성해본 경험이 면접에서 강력한 무기가 됩니다.',
     specific: {
       title: '마케터 심층 분석',
       items: [
-        { heading: '소비자 심리 분석', body: '타겟의 니즈, 페인포인트, 구매 단계별 심리를 이해하고, 메시지와 채널을 맞추는 것이 핵심입니다.' },
-        { heading: '데이터 기반 성과 측정(Performance)', body: '광고비 대비 전환, LTV, 채널별 효율을 측정하고 A/B 테스트로 카피·랜딩을 최적화합니다.' },
+        {
+          heading: '소비자 심리 분석',
+          body: '타겟의 니즈, 페인포인트, 구매 단계별 심리를 이해하고, 메시지와 채널을 맞추는 것이 핵심입니다.',
+        },
+        {
+          heading: '데이터 기반 성과 측정(Performance)',
+          body: '광고비 대비 전환, LTV, 채널별 효율을 측정하고 A/B 테스트로 카피·랜딩을 최적화합니다.',
+        },
       ],
     },
+    proQuote:
+      "마케팅은 '감'이 아니라 '데이터 기반의 의사결정 프로세스'입니다. 고객의 문제를 우리 서비스가 어떻게 해결해 주는지 명확하게 전달하고, 숫자로 증명해야 해요.",
+    proTip: '직접 광고비를 써서 캠페인을 운영해보고 리포트를 작성해본 경험이 면접에서 강력한 무기가 됩니다.',
   },
 }
 
 const JOB_CARDS = [
   { id: 'pm', ...CAREER_DATA.pm },
-  { id: 'data', ...CAREER_DATA.data },
-  { id: 'marketing', ...CAREER_DATA.marketing },
+  { id: 'da', ...CAREER_DATA.da },
+  { id: 'marketer', ...CAREER_DATA.marketer },
 ]
 
 function PersonalityBar({ label, value, low, high }) {
@@ -176,13 +186,17 @@ function PersonalityBar({ label, value, low, high }) {
     <div className="mb-4">
       <div className="flex justify-between text-sm mb-1">
         <span className="font-medium text-slate-700">{label}</span>
-        <span className="text-slate-500 text-xs">{low} ← → {high}</span>
+        <span className="text-slate-500 text-xs">{value}%</span>
       </div>
       <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
         <div
           className="h-full bg-indigo-500 rounded-full transition-all duration-500"
           style={{ width: `${value}%` }}
         />
+      </div>
+      <div className="flex justify-between text-[11px] text-slate-500 mt-1">
+        <span>{low}</span>
+        <span>{high}</span>
       </div>
     </div>
   )
@@ -191,9 +205,9 @@ function PersonalityBar({ label, value, low, high }) {
 function SectionCard({ icon: Icon, title, children }) {
   return (
     <div className="bg-[#F8FAFC] rounded-2xl p-5 border border-slate-200/80 shadow-sm">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-3">
         <Icon className="w-5 h-5 text-indigo-600" />
-        <h3 className="font-bold text-[#1E293B]">{title}</h3>
+        <h3 className="font-bold text-[#1E293B] text-sm sm:text-base">{title}</h3>
       </div>
       {children}
     </div>
@@ -214,51 +228,67 @@ export default function ExplorePage() {
           직무 카드를 클릭하면 상세 리포트를 확인할 수 있습니다.
         </p>
 
-        {/* 3개 직무 카드 */}
+        {/* 상단 직무 선택 카드 (가로 카드) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
           {JOB_CARDS.map((j) => (
             <button
               key={j.id}
               type="button"
               onClick={() => setSelectedId(selectedId === j.id ? null : j.id)}
-              className={`text-left rounded-2xl border-2 overflow-hidden transition-all duration-200 ${
+              className={`text-left rounded-2xl overflow-hidden bg-white shadow-xl transition-all duration-200 ${
                 selectedId === j.id
-                  ? 'border-indigo-500 bg-indigo-50 shadow-md'
-                  : 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm'
+                  ? 'border-2 border-indigo-500'
+                  : 'border border-slate-200 hover:border-indigo-300 hover:shadow-md'
               }`}
             >
-              <div className="flex flex-col sm:flex-row">
+              <div className="flex flex-col h-full">
                 <img
                   src={JOB_IMAGES[j.id]}
                   alt={j.name}
-                  className="w-full sm:w-28 h-32 sm:h-auto sm:min-h-[120px] object-cover rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none shadow-lg flex-shrink-0"
+                  className="w-full h-40 object-cover"
                 />
-                <div className="p-4 sm:p-5 flex-1">
-                  <h2 className="text-lg font-bold text-[#1E293B] mb-2">{j.name}</h2>
-                  <p className="text-slate-600 text-sm leading-relaxed">{j.summary}</p>
+                <div className="p-5 flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-slate-900 mb-1">{j.name}</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
+                    {j.id === 'pm' && '고객의 문제를 정의하고 제품의 비전을 설정합니다.'}
+                    {j.id === 'da' && '복잡한 데이터 속에서 비즈니스 인사이트를 발견합니다.'}
+                    {j.id === 'marketer' && '고객의 마음을 움직여 브랜드의 성장을 유도합니다.'}
+                  </p>
+                  <div className="mt-auto">
+                    <ChevronRight className="w-4 h-4 text-transparent mb-2" aria-hidden />{/* spacer */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-slate-500">카드를 클릭해 상세 보기</span>
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </button>
           ))}
         </div>
 
-        {/* 직무 상세 리포트 */}
+        {/* 하단 상세 섹션 */}
         {job && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
             <div className="flex flex-col sm:flex-row items-stretch">
               <img
                 src={JOB_IMAGES[selectedId]}
                 alt={job.name}
-                className="w-full sm:w-72 sm:min-h-[200px] object-cover rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none shadow-lg flex-shrink-0"
+                className="w-full sm:w-72 sm:min-h-[220px] object-cover rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none"
               />
               <div className="flex-1 px-6 py-5 border-b sm:border-b-0 sm:border-l border-slate-100 bg-gradient-to-r from-slate-50 to-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-xl font-bold text-[#1E293B]">{job.name}</h2>
                   {job.coreValue && (
                     <span className="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-indigo-50 text-indigo-700 text-sm font-semibold rounded-xl">
                       <Target className="w-4 h-4" />
                       {job.coreValue}
                     </span>
+                  )}
+                  {job.targetCompanies && (
+                    <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      {job.targetCompanies}
+                    </p>
                   )}
                 </div>
                 <button
@@ -278,15 +308,17 @@ export default function ExplorePage() {
                 <p className="text-slate-600 text-sm mb-4">
                   어떤 성향의 사람이 이 직무에서 성공하기 쉬운지 참고용으로 확인해 보세요.
                 </p>
-                {job.personalityFit.map((item, i) => (
-                  <PersonalityBar
-                    key={i}
-                    label={item.label}
-                    value={item.value}
-                    low={item.low}
-                    high={item.high}
-                  />
-                ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {job.personalityFit.map((item, i) => (
+                    <PersonalityBar
+                      key={i}
+                      label={item.label}
+                      value={item.value}
+                      low={item.low}
+                      high={item.high}
+                    />
+                  ))}
+                </div>
               </SectionCard>
 
               {/* Core Skills */}
@@ -309,22 +341,12 @@ export default function ExplorePage() {
                 </ul>
               </SectionCard>
 
-              {/* 주요 업무 및 역량 */}
-              <SectionCard icon={Briefcase} title="주요 업무 및 역량 (현직자 강조)">
-                <ul className="space-y-2">
-                  {job.mainTasks.map((task, i) => (
-                    <li key={i} className="flex gap-2 text-sm">
-                      <span className="text-indigo-500 mt-0.5">•</span>
-                      <span className="text-slate-700">{task}</span>
-                    </li>
-                  ))}
-                </ul>
-              </SectionCard>
-
               {/* Work Environment */}
               <SectionCard icon={Building2} title="Work Environment (업무 환경)">
-                {job.workEnv.description && (
-                  <p className="text-slate-600 text-sm mb-4 leading-relaxed">{job.workEnv.description}</p>
+                {job.workEnv?.description && (
+                  <p className="text-slate-600 text-sm mb-4 leading-relaxed">
+                    {job.workEnv.description}
+                  </p>
                 )}
                 <div className="space-y-4">
                   <div>
@@ -335,7 +357,7 @@ export default function ExplorePage() {
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-emerald-500 rounded-full"
-                        style={{ width: `${job.workEnv.teamCollaboration}%` }}
+                        style={{ width: `${job.workEnv?.teamCollaboration ?? 0}%` }}
                       />
                     </div>
                   </div>
@@ -347,7 +369,7 @@ export default function ExplorePage() {
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-amber-500 rounded-full"
-                        style={{ width: `${job.workEnv.deadlinePressure}%` }}
+                        style={{ width: `${job.workEnv?.deadlinePressure ?? 0}%` }}
                       />
                     </div>
                   </div>
@@ -359,7 +381,7 @@ export default function ExplorePage() {
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-violet-500 rounded-full"
-                        style={{ width: `${job.workEnv.autonomy}%` }}
+                        style={{ width: `${job.workEnv?.autonomy ?? 0}%` }}
                       />
                     </div>
                   </div>
@@ -369,7 +391,7 @@ export default function ExplorePage() {
               {/* Salary Insight */}
               <SectionCard icon={Banknote} title="Salary Insight (급여 상세)">
                 <p className="text-slate-600 text-sm mb-4">
-                  신입부터 시니어까지 참고용 예상 연봉(만 원) 범위입니다.
+                  신입부터 시니어·C-level까지 참고용 예상 연봉(만 원) 범위입니다.
                 </p>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -396,7 +418,7 @@ export default function ExplorePage() {
               {/* Career Path */}
               <SectionCard icon={TrendingUp} title="Career Path (커리어 경로)">
                 <p className="text-slate-600 text-sm mb-3">
-                  이 직무 이후 성장 가능한 방향입니다.
+                  이 직무 이후 성장 가능한 대표적인 커리어 경로입니다.
                 </p>
                 <ul className="flex flex-wrap gap-2">
                   {job.careerPath.map((path, i) => (
@@ -412,8 +434,8 @@ export default function ExplorePage() {
                 </ul>
               </SectionCard>
 
-              {/* 직무별 특화 */}
-              <SectionCard icon={Lightbulb} title={job.specific.title}>
+              {/* 심층 분석 */}
+              <SectionCard icon={Briefcase} title={job.specific.title}>
                 <div className="space-y-4">
                   {job.specific.items.map((item, i) => (
                     <div key={i}>
@@ -425,7 +447,7 @@ export default function ExplorePage() {
               </SectionCard>
 
               {/* 현직자의 조언 */}
-              <SectionCard icon={Quote} title="현직자의 한마디 / 조언">
+              <SectionCard icon={Lightbulb} title="현직자의 한마디 / 조언">
                 <div className="space-y-4">
                   <div className="relative pl-4 border-l-4 border-indigo-300 bg-indigo-50/50 rounded-r-xl py-3 pr-4">
                     <p className="text-slate-700 text-sm leading-relaxed italic">
@@ -435,7 +457,9 @@ export default function ExplorePage() {
                   <div className="flex gap-2 items-start">
                     <Lightbulb className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <span className="text-xs font-semibold text-amber-700 uppercase tracking-wider">취업·성장 팁</span>
+                      <span className="text-xs font-semibold text-amber-700 uppercase tracking-wider">
+                        취업·성장 팁
+                      </span>
                       <p className="text-slate-700 text-sm leading-relaxed mt-1">{job.proTip}</p>
                     </div>
                   </div>
@@ -443,10 +467,10 @@ export default function ExplorePage() {
               </SectionCard>
 
               {/* CTA */}
-              <div className="pt-4 pb-2">
+              <div className="pt-2">
                 <Link
-                  to={job.simulationPath}
-                  className="flex items-center justify-center gap-2 w-full py-4 px-6 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 shadow-sm transition-colors shadow-lg"
+                  to={`/simulation/${selectedId}`}
+                  className="flex items-center justify-center gap-2 w-full py-4 px-6 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 shadow-sm transition-colors"
                 >
                   <BarChart3 className="w-5 h-5" />
                   이 직무 시뮬레이션 시작하기
