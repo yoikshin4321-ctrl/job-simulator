@@ -25,10 +25,12 @@ const JOB_IMAGES = {
 
 const CAREER_DATA = {
   pm: {
-    name: 'PM (서비스 기획)',
-    summary: '고객의 문제를 정의하고 제품의 비전을 설정합니다.',
+    name: '서비스 기획 (PM)',
+    summary:
+      '고객의 숨은 문제를 발견해 해결책을 설계하고, 제품의 우선순위와 비전을 결정하여 비즈니스 가치를 창출하는 중추적인 역할을 수행합니다.',
     coreValue: '문제 정의 및 해결',
-    targetCompanies: '네이버, 카카오, 토스, 쿠팡 등 대규모 디지털 서비스 기업에서 제품 방향과 우선순위를 정합니다.',
+    targetCompanies:
+      '고객의 문제를 발견하고 이를 해결하기 위한 제품 비전과 우선순위를 결정하며, 서비스 구조 설계부터 런칭까지 비즈니스 가치를 창출하는 핵심 역할을 수행합니다.',
     personalityFit: [
       { label: '전략적 사고', value: 93, low: '실행', high: '전략' },
       { label: '소통·조율', value: 80, low: '내향', high: '소통 중심' },
@@ -49,11 +51,10 @@ const CAREER_DATA = {
         'PM은 개발·디자인·비즈니스 등 다양한 팀과 밀접하게 협업합니다. 출시 일정과 마감 압박이 있으나, 전략 수립과 우선순위 결정에 대한 자율성이 높은 편입니다.',
     },
     salaryInsight: [
-      { level: '신입', min: 4000, max: 5500 },
-      { level: '주니어(1~3년)', min: 5000, max: 7000 },
-      { level: '미들(3~6년)', min: 6000, max: 9000 },
-      { level: '시니어(6년+)', min: 8000, max: 12000 },
-      { level: 'C-level(CPO)', min: 15000, max: 30000 },
+      { level: '주니어 (0~3년)', min: 3200, max: 4500 },
+      { level: '미들 (4~7년)', min: 4800, max: 6500 },
+      { level: '시니어 (8~12년)', min: 7000, max: 9000 },
+      { level: '리드/C-Level', min: 10000, max: 10000 },
     ],
     careerPath: ['주니어 PM', '시니어 PM', '그룹 PM', '제품 책임자(CPO)', '스타트업 창업·공동창업'],
     specific: {
@@ -74,11 +75,12 @@ const CAREER_DATA = {
     proTip: '작은 프로젝트라도 처음부터 끝까지 기획하고 런칭해본 경험이 가장 큰 자산이 됩니다.',
   },
   da: {
-    name: '데이터 애널리스트 (Data Analyst)',
-    summary: '복잡한 데이터 속에서 비즈니스 인사이트를 발견합니다.',
+    name: '데이터 분석가 (Data Analyst)',
+    summary:
+      '방대한 데이터 속에서 유의미한 패턴을 찾아내고, 객관적인 지표와 통계적 근거를 바탕으로 비즈니스 의사결정을 돕는 전략적 인사이트를 도출합니다.',
     coreValue: '비즈니스 인사이트 도출',
     targetCompanies:
-      '구글, 당근마켓, 무신사, 뱅크샐러드, 삼성전자 등 데이터 드리븐 조직에서 숫자 속 신호를 찾아냅니다.',
+      '방대한 데이터 속에서 비즈니스 인사이트를 발견하고, 객관적인 지표와 통계적 근거를 바탕으로 전략적 의사결정을 지원하는 전문가입니다.',
     personalityFit: [
       { label: '분석적 사고', value: 95, low: '직관', high: '분석' },
       { label: '논리·수치 감각', value: 92, low: '정성', high: '정량' },
@@ -99,11 +101,10 @@ const CAREER_DATA = {
         '데이터 팀 내 업무 비중이 크지만, 비즈니스팀·경영진과의 리포팅·소통이 중요합니다. 데이터 분석에 집중할 수 있는 자율성이 높은 편입니다.',
     },
     salaryInsight: [
-      { level: '신입', min: 3800, max: 5000 },
-      { level: '주니어(1~3년)', min: 4500, max: 6500 },
-      { level: '미들(3~6년)', min: 5500, max: 8500 },
-      { level: '시니어(6년+)', min: 7500, max: 11000 },
-      { level: 'C-level(CDO)', min: 12000, max: 25000 },
+      { level: '주니어 (0~3년)', min: 3400, max: 4800 },
+      { level: '미들 (4~7년)', min: 5200, max: 7500 },
+      { level: '시니어 (8~12년)', min: 8000, max: 11000 },
+      { level: '리드/C-Level', min: 12000, max: 12000 },
     ],
     careerPath: ['주니어 애널리스트', '시니어 애널리스트', '데이터 사이언티스트', 'BI/분석 리드', 'CDO·데이터 책임자'],
     specific: {
@@ -124,11 +125,12 @@ const CAREER_DATA = {
     proTip: '실제 비즈니스 데이터를 가지고 가설을 세우고 분석해본 포트폴리오를 만드세요.',
   },
   marketer: {
-    name: '마케터 (Performance/Content Marketer)',
-    summary: '고객의 마음을 움직여 브랜드의 성장을 유도합니다.',
+    name: '마케터 (Marketer)',
+    summary:
+      '타겟 고객에게 브랜드 메시지를 효과적으로 전달하고, 데이터 기반의 콘텐츠 전략과 채널 최적화를 통해 고객 유입과 비즈니스 성장을 견인합니다.',
     coreValue: '고객 획득 및 전환',
     targetCompanies:
-      'CJ ENM, 아모레퍼시픽, 샌드박스, 오늘의집, 현대자동차 등 브랜드·콘텐츠 중심 기업에서 성과를 만듭니다.',
+      '브랜드 메시지를 타겟 고객에게 효과적으로 전달하고, 데이터 기반의 캠페인 기획과 채널 최적화를 통해 고객 유입 및 비즈니스 성장을 견인합니다.',
     personalityFit: [
       { label: '창의성', value: 88, low: '보수', high: '창의' },
       { label: '트렌드 민감度', value: 85, low: '안정', high: '변화' },
@@ -149,11 +151,10 @@ const CAREER_DATA = {
         '캠페인 기획·운영을 위해 다양한 부서와 협업합니다. 성과 지표에 대한 압박이 있으나, 채널·메시지에 대한 창의적 실험이 가능합니다.',
     },
     salaryInsight: [
-      { level: '신입', min: 3500, max: 4800 },
-      { level: '주니어(1~3년)', min: 4000, max: 6000 },
-      { level: '미들(3~6년)', min: 5000, max: 7500 },
-      { level: '시니어(6년+)', min: 6500, max: 10000 },
-      { level: 'C-level(CMO)', min: 12000, max: 25000 },
+      { level: '주니어 (0~3년)', min: 2800, max: 4000 },
+      { level: '미들 (4~7년)', min: 4500, max: 6000 },
+      { level: '시니어 (8~12년)', min: 6500, max: 8500 },
+      { level: '리드/C-Level', min: 9500, max: 9500 },
     ],
     careerPath: ['주니어 마케터', '시니어 마케터', '마케팅 매니저', '그로스/퍼포먼스 리드', 'CMO'],
     specific: {
@@ -248,11 +249,11 @@ export default function ExplorePage() {
                   className="w-full h-40 object-cover"
                 />
                 <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="text-lg font-bold text-slate-900 mb-1">{j.name}</h3>
+                  <h3 className="text-lg font-bold text-slate-900 mb-1 whitespace-normal">
+                    {j.name}
+                  </h3>
                   <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
-                    {j.id === 'pm' && '고객의 문제를 정의하고 제품의 비전을 설정합니다.'}
-                    {j.id === 'da' && '복잡한 데이터 속에서 비즈니스 인사이트를 발견합니다.'}
-                    {j.id === 'marketer' && '고객의 마음을 움직여 브랜드의 성장을 유도합니다.'}
+                    {j.summary}
                   </p>
                   <div className="mt-auto">
                     <ChevronRight className="w-4 h-4 text-transparent mb-2" aria-hidden />{/* spacer */}
@@ -390,8 +391,11 @@ export default function ExplorePage() {
 
               {/* Salary Insight */}
               <SectionCard icon={Banknote} title="Salary Insight (급여 상세)">
-                <p className="text-slate-600 text-sm mb-4">
-                  신입부터 시니어·C-level까지 참고용 예상 연봉(만 원) 범위입니다.
+                <p className="text-slate-600 text-sm mb-1">
+                  대한민국 중소/중견 기업 및 스타트업 기준, 경력 단계별 참고용 예상 연봉(단위: 만 원)입니다.
+                </p>
+                <p className="text-[11px] text-slate-500 mb-4">
+                  * 위 금액은 기본급 기준이며, 기업 규모 및 개인의 역량에 따라 차이가 클 수 있습니다.
                 </p>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -402,14 +406,30 @@ export default function ExplorePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {job.salaryInsight.map((row, i) => (
-                        <tr key={i} className="border-b border-slate-100">
-                          <td className="py-2.5 text-slate-700">{row.level}</td>
-                          <td className="py-2.5 text-right text-slate-600">
-                            {row.min}만 ~ {row.max}만
-                          </td>
-                        </tr>
-                      ))}
+                      {job.salaryInsight.map((row, i) => {
+                        const isTopLevel = i === job.salaryInsight.length - 1
+                        const isOpenEnded = isTopLevel && row.min === row.max
+                        const rangeText = isOpenEnded
+                          ? `${row.min.toLocaleString()}만 원 이상`
+                          : `${row.min.toLocaleString()}만 ~ ${row.max.toLocaleString()}만`
+                        return (
+                          <tr key={i} className="border-b border-slate-100">
+                            <td className="py-2.5 text-slate-700">{row.level}</td>
+                            <td
+                              className={`py-2.5 text-right ${
+                                isTopLevel ? 'text-indigo-700 font-semibold' : 'text-slate-600'
+                              }`}
+                            >
+                              {rangeText}
+                              {isOpenEnded && (
+                                <span className="block text-[11px] text-slate-500 mt-0.5">
+                                  (역량 및 성과급에 따라 상한선 없음)
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>

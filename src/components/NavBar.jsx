@@ -70,7 +70,7 @@ export default function NavBar() {
             to="/"
             className="text-lg font-bold text-indigo-600 hover:text-indigo-700 transition-colors tracking-tight flex-shrink-0"
           >
-            Job Simulation
+            JOB-EX
           </Link>
           <nav className="hidden md:flex items-center gap-1">
             <Link to="/explore" className={linkClass('/explore')}>

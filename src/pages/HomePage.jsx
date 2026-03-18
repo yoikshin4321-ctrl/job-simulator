@@ -297,7 +297,7 @@ export default function HomePage() {
               Micro-Credential · 역량 인증 배지
             </p>
             <p className="text-sm sm:text-base text-slate-700 mb-2">
-              Rehearsal의 배지는 단순 수료 스티커가 아니라,{' '}
+              자빅스(JOB-EX)의 배지는 단순 수료 스티커가 아니라,{' '}
               <span className="font-semibold">실제 과제 수행 결과를 기반으로 발급되는 역량 인증서</span>
               입니다.
             </p>
@@ -440,7 +440,7 @@ export default function HomePage() {
 
               <div className="mt-3 space-y-1 text-[10px] sm:text-xs leading-relaxed text-slate-500">
                 <p>
-                  상호: Job Simulation Lab · 대표: 홍길동 · 사업자등록번호: 000-00-00000
+                  상호: JOB-EX Lab · 대표: 홍길동 · 사업자등록번호: 000-00-00000
                 </p>
                 <p>주소: 서울특별시 강남구 테헤란로 000, 00층 · 통신판매업 신고번호: 제 2024-서울강남-00000호</p>
                 <p>이메일: support@jobsimulation.kr · 개인정보보호책임자: 김커리어</p>
@@ -450,7 +450,7 @@ export default function HomePage() {
 
           <div className="border-t border-slate-200 pt-3 mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <p className="text-[10px] sm:text-xs text-slate-400">
-              © {new Date().getFullYear()} Job Simulation. All rights reserved.
+              © {new Date().getFullYear()} JOB-EX. All rights reserved.
             </p>
             <div className="flex flex-wrap gap-3 text-[10px] sm:text-xs text-slate-400">
               <span>이용약관</span>

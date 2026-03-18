@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import AboutPage from './pages/AboutPage'
 import ResultPage from './pages/ResultPage'
+import TaskGeneratorPage from './pages/TaskGeneratorPage'
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/task-generator" element={<TaskGeneratorPage />} />
           </Routes>
         </main>
       </ErrorBoundary>

@@ -9,10 +9,10 @@ export default function AboutPage() {
           <div className="mb-10">
             <Link to="/" className="inline-flex items-baseline gap-2 group">
               <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111827] group-hover:text-indigo-600 transition-colors">
-                Rehearsal
+                자빅스(JOB-EX)
               </span>
               <span className="text-xs sm:text-sm text-slate-500">
-                직무 리허설 기반 실무 역량 인증 플랫폼
+                실전 직무 리허설, 자빅스(JOB-EX)
               </span>
             </Link>
           </div>
@@ -24,7 +24,7 @@ export default function AboutPage() {
               <span className="text-indigo-600">실무 역량 인증</span>
             </h1>
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-3xl">
-              Rehearsal는 실제 기업의 업무 맥락을 반영한 시뮬레이션 과제를 통해,
+              자빅스(JOB-EX)는 실제 기업의 업무 맥락을 반영한 실전 직무 리허설 과제를 통해,
               학생과 예비 직장인의 직무 수행 능력을 객관적으로 측정하고 인증하는
               마이크로크리덴셜 플랫폼입니다. 단순한 문제 풀이를 넘어, 실제 실무에
               가장 가까운 &quot;리허설&quot; 경험을 제공합니다.
@@ -38,7 +38,7 @@ export default function AboutPage() {
                 Our Mission
               </h2>
               <p className="text-sm sm:text-base text-slate-700 leading-relaxed">
-                Rehearsal의 미션은{' '}
+                자빅스(JOB-EX)의 미션은{' '}
                 <span className="font-semibold">
                   학습 · 평가 · 인증 · 기회를 하나의 여정으로 연결
                 </span>
@@ -52,7 +52,7 @@ export default function AboutPage() {
                 For Universities & Companies
               </h2>
               <p className="text-sm sm:text-base text-slate-700 leading-relaxed">
-                Rehearsal는 대학과 기업을 위한{' '}
+                자빅스(JOB-EX)는 대학과 기업을 위한{' '}
                 <span className="font-semibold">마이크로크리덴셜 플랫폼</span>으로,
                 교육 과정에 실무 시뮬레이션을 도입하고, 결과 데이터를 기반으로
                 학생의 역량을 정교하게 진단할 수 있게 합니다. 기업은 검증된
@@ -65,7 +65,7 @@ export default function AboutPage() {
           {/* 제공 서비스 리스트 */}
           <div className="mb-12">
             <h2 className="text-sm font-semibold text-slate-900 mb-3">
-              Rehearsal가 제공하는 것들
+              자빅스(JOB-EX)가 제공하는 것들
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -107,7 +107,7 @@ export default function AboutPage() {
                 Ready to Start
               </p>
               <p className="text-sm sm:text-base text-slate-700">
-                우리 대학/조직에 Rehearsal를 도입하고 싶다면, 데모를 신청해 보세요.
+                우리 대학/조직에 자빅스(JOB-EX)를 도입하고 싶다면, 데모를 신청해 보세요.
               </p>
             </div>
             <div className="flex gap-2">

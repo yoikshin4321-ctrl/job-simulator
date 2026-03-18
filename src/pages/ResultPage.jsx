@@ -178,7 +178,7 @@ export default function ResultPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold !text-white mb-1">
+              <h1 className="text-xl sm:text-2xl font-bold !text-white ">
                 {interestLabel} 실무 준비도 · 결과 리포트
               </h1>
               <p className="text-xs sm:text-sm text-white/80">
@@ -326,7 +326,7 @@ export default function ResultPage() {
               </div>
 
               <p className="relative text-xs sm:text-sm text-white leading-relaxed mb-3">
-                이번 시뮬레이션 결과는 Rehearsal의 마이크로크리덴셜 기준을 충족하여,
+                이번 시뮬레이션 결과는 자빅스(JOB-EX)의 마이크로크리덴셜 기준을 충족하여,
                 &quot;PM 실무 준비도&quot; 인증 배지가 부여되었습니다. 해당 배지는 이력서·포트폴리오에
                 첨부해 실무 역량을 증명할 수 있습니다.
               </p>
@@ -437,7 +437,7 @@ export default function ResultPage() {
               </button>
             </div>
             <p className="text-[11px] sm:text-xs text-slate-400 mb-3">
-              각 항목은 0~100점 사이로 평가되며, Rehearsal의 직무별 전문가 패널과 AI 평가 모델이
+              각 항목은 0~100점 사이로 평가되며, 자빅스(JOB-EX)의 직무별 전문가 패널과 AI 평가 모델이
               함께 기준을 정의했습니다.
             </p>
             <div className="space-y-3 text-[11px] sm:text-xs text-slate-200">
