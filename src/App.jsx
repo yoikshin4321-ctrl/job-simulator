@@ -9,6 +9,7 @@ import ReportPage from './pages/ReportPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import AboutPage from './pages/AboutPage'
+import ResultPage from './pages/ResultPage'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/simulation" element={<SimulationPage />} />
             <Route path="/simulation/:id" element={<SimulationDetailPage />} />
             <Route path="/report" element={<ReportPage />} />
+            <Route path="/result" element={<ResultPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/about" element={<AboutPage />} />

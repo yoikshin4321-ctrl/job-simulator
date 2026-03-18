@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { analyzeAnswerWithOpenAI } from '../api/openai';
 
 // 1. 점진적 난이도의 3단계 문제 데이터
 const SIMULATION_DATA = {
@@ -84,20 +85,25 @@ export default function SimulationDetailPage() {
   const params = useParams();
   const id = (params.id || 'pm').toLowerCase();
   const roleData = SIMULATION_DATA[id] || SIMULATION_DATA.pm;
+  const navigate = useNavigate();
 
   // 2. 단계별 진행 로직 상태
   const [currentLevel, setCurrentLevel] = useState(0); // 0,1,2 => Level 1,2,3
   const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [feedback, setFeedback] = useState('');
+  const [loadingType, setLoadingType] = useState(null); // 'next' | 'analyze' | null
+  // aiFeedback: null | string(raw) | { summary: string, items: { label, score, reason }[] }
+  const [aiFeedback, setAiFeedback] = useState(null);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [showNext, setShowNext] = useState(false);
   const [error, setError] = useState('');
-  const [isReport, setIsReport] = useState(false);
 
   const levelData = roleData.levels[currentLevel];
   const isLastLevel = currentLevel === roleData.levels.length - 1;
 
-  const handleSubmit = () => {
+  const fetchAICheck = async (advanceAfter = false) => {
+    console.log('AI 호출 시작', answer);
+
     if (!answer.trim()) {
       setError('답안을 먼저 입력해 주세요.');
       return;
@@ -105,343 +111,168 @@ export default function SimulationDetailPage() {
 
     setError('');
     setIsLoading(true);
-    setFeedback('');
-    setShowNext(false);
+    setHasSubmitted(true);
 
-    // 100% 가상 로직: 2초 로딩 후 피드백 생성
-    setTimeout(() => {
-      setIsLoading(false);
-      setFeedback(
-        [
-          '작성하신 답안에 대한 분석 결과입니다. (가상 피드백)',
-          '',
-          '✅ 잘한 점',
-          '- 문제 상황을 자신의 언어로 정리하려는 시도가 좋습니다.',
-          '- 핵심 지표와 의사결정 기준을 연결하려는 흐름이 보입니다.',
-          '',
-          '🔎 다음 단계에서 신경 써야 할 점',
-          '- 숫자와 지표를 조금 더 구체적으로 적어보면 설득력이 높아집니다.',
-          '- 실제 이해관계자(개발/디자인/마케팅 등)에게 어떻게 설명하고 설득할지까지 상상해 보세요.',
-        ].join('\n')
-      );
+    try {
+      const { raw, parsed } = await analyzeAnswerWithOpenAI(answer, id);
+      console.log('AI 응답 원본:', raw, parsed);
+
+      let structured = parsed;
+
+      // 혹시 parsed가 비어 있고 raw만 온 경우, 한 번 더 파싱 시도
+      if (!structured && raw) {
+        try {
+          structured = JSON.parse(raw);
+        } catch {
+          structured = null;
+        }
+      }
+
+      if (structured && typeof structured === 'object') {
+        const items = Object.entries(structured)
+          .map(([label, value]) => {
+            if (!value || typeof value !== 'object') return null;
+            const score = value.score ?? value.점수 ?? null;
+            const reason = value.reason ?? value.평가이유 ?? value.feedback ?? '';
+            if (!reason && score == null) return null;
+            return { label, score, reason };
+          })
+          .filter(Boolean);
+
+        const summary =
+          items.length > 0
+            ? items
+                .map((it) => `${it.label}: ${it.reason}`)
+                .join(' ')
+            : raw || '';
+
+        setAiFeedback({ summary, items });
+      } else {
+        // 구조화에 실패한 경우, 일단 원본 텍스트를 그대로 보여준다
+        setAiFeedback(raw || '');
+      }
+
+      // 단계별 누적 데이터 저장
+      const historyKey = 'job_sim_ai_history';
+      try {
+        const rawHistory = localStorage.getItem(historyKey);
+        const parsedHistory = rawHistory ? JSON.parse(rawHistory) : [];
+        const nextHistory = [
+          ...parsedHistory,
+          {
+            roleId: id,
+            levelIndex: currentLevel,
+            levelLabel: levelData.label,
+            answer,
+            result: structured || null,
+            analyzedAt: new Date().toISOString(),
+          },
+        ];
+        localStorage.setItem(historyKey, JSON.stringify(nextHistory));
+      } catch {
+        // history 저장 실패는 치명적이지 않으므로 무시
+      }
+
       setShowNext(true);
-    }, 2000);
+
+      if (advanceAfter) {
+        if (isLastLevel) {
+          // 최종 종합 분석용 데이터는 마지막 단계 결과 기준으로 저장
+          const payload = {
+            roleId: id,
+            levelsCompleted: currentLevel + 1,
+            answer,
+            result: structured || null,
+            analyzedAt: new Date().toISOString(),
+          };
+          localStorage.setItem('job_sim_ai_result', JSON.stringify(payload));
+          navigate('/result', { replace: true });
+          return;
+        }
+
+        // 다음 레벨로 이동
+        setCurrentLevel((prev) => Math.min(prev + 1, roleData.levels.length - 1));
+        setAnswer('');
+        setAiFeedback(null);
+        setShowNext(false);
+        setError('');
+      }
+    } catch (e) {
+      console.error(e);
+      // 에러 정보를 결과 페이지에서도 참고할 수 있도록 저장
+      try {
+        localStorage.setItem(
+          'job_sim_ai_result_error',
+          JSON.stringify({ message: e?.message || '알 수 없는 오류가 발생했습니다.' }),
+        );
+      } catch {
+        // ignore
+      }
+      setError('AI 분석에 실패했습니다. API 키를 확인해주세요.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleNextLevel = () => {
-    // 마지막 레벨이면 최종 리포트로 전환
-    if (isLastLevel) {
-      setIsReport(true);
+  const handleSubmit = async () => {
+    // 단일 단계 분석만 수행 (오버레이는 띄우지 않음)
+    await fetchAICheck(false);
+  };
+
+  const handleStepChange = async (mode) => {
+    if (!answer.trim()) {
+      setError('답안을 먼저 입력해 주세요.');
       return;
     }
 
-    // 다음 레벨로 이동
-    setCurrentLevel((prev) => Math.min(prev + 1, roleData.levels.length - 1));
-    setAnswer('');
-    setFeedback('');
-    setShowNext(false);
-    setError('');
-    setIsLoading(false);
+    if (mode === 'next' && isLastLevel) {
+      // 마지막 단계에서는 분석 모드로만 이동
+      mode = 'analyze';
+    }
+
+    if (mode === 'next') {
+      setLoadingType('next');
+      setIsLoading(true);
+      // 0.8초 정도의 단계 전환 로딩 후 다음 단계로 이동
+      setTimeout(async () => {
+        await fetchAICheck(true);
+        setIsLoading(false);
+        setLoadingType(null);
+      }, 800);
+    } else if (mode === 'analyze') {
+      setLoadingType('analyze');
+      setIsLoading(true);
+      const start = Date.now();
+      await fetchAICheck(true);
+      const elapsed = Date.now() - start;
+      const remain = 2500 - elapsed;
+      if (remain > 0) {
+        setTimeout(() => {
+          setIsLoading(false);
+          setLoadingType(null);
+        }, remain);
+      } else {
+        setIsLoading(false);
+        setLoadingType(null);
+      }
+    }
   };
-
-  // 3. 최종 결과 리포트용 가상 데이터
-  const personalityProfiles = {
-    pm: {
-      title: 'PM (서비스 기획)',
-      fitLabel: '매우 적합',
-      summary: '사용자 문제를 정의하고 팀을 이끄는 PM 역할에 높은 잠재력을 보이고 있습니다.',
-      strengths: [
-        '복잡한 상황을 구조화하고 우선순위를 세우는 능력이 돋보입니다.',
-        '이해관계자 간 조율과 커뮤니케이션에 강점이 있습니다.',
-      ],
-      improvements: [
-        '정량 지표와 비즈니스 임팩트를 연결하는 연습을 더해 보세요.',
-        '리스크와 제약 조건을 명시적으로 표현하는 습관을 들이면 좋습니다.',
-      ],
-      traits: [
-        { name: '전략적 사고', score: 90 },
-        { name: '데이터 해석', score: 75 },
-        { name: '소통·조율', score: 88 },
-        { name: '문제 해결', score: 92 },
-        { name: '리더십', score: 85 },
-        { name: '실행력', score: 80 },
-      ],
-      roadmap: [
-        '서비스 기획 관련 서적과 PM 블로그를 통해 문제 정의 사례를 수집해 보세요.',
-        '사이드 프로젝트나 해커톤에서 기획자 역할을 맡아 백로그를 직접 작성해 보세요.',
-        '실제 기업의 채용 공고를 참고해, 자신만의 PM 포트폴리오를 정리해 보세요.',
-      ],
-    },
-    da: {
-      title: 'DA (데이터 분석)',
-      fitLabel: '적합',
-      summary: '데이터를 활용해 비즈니스 인사이트를 도출하는 역량이 잘 보입니다.',
-      strengths: [
-        '퍼널 구조와 지표 정의에 대한 이해도가 높습니다.',
-        '데이터를 기반으로 가설을 세우고 검증하는 사고 흐름이 좋습니다.',
-      ],
-      improvements: [
-        'SQL, 파이썬 등 도구 활용 능력을 더 키우면 분석 속도와 범위가 넓어집니다.',
-        '분석 결과를 비즈니스 액션으로 번역하는 연습을 꾸준히 해 보세요.',
-      ],
-      traits: [
-        { name: '전략적 사고', score: 80 },
-        { name: '데이터 해석', score: 90 },
-        { name: '소통·조율', score: 72 },
-        { name: '문제 해결', score: 85 },
-        { name: '리더십', score: 70 },
-        { name: '실행력', score: 78 },
-      ],
-      roadmap: [
-        'SQL, 파이썬, 엑셀/구글시트 등 기본 분석 도구를 체계적으로 학습해 보세요.',
-        '공개 데이터셋으로 작은 분석 리포트를 만들어 포트폴리오를 쌓아 보세요.',
-        '스타트업/대기업 데이터 직무 인턴십에 도전해 실무 경험을 쌓아 보세요.',
-      ],
-    },
-    marketer: {
-      title: '마케터',
-      fitLabel: '매우 적합',
-      summary: '타깃 정의와 메시지 설계, 매체 전략 측면에서 높은 잠재력을 보이고 있습니다.',
-      strengths: [
-        '타겟 페르소나를 구체적으로 상상하고 언어화하는 능력이 강점입니다.',
-        '채널별 역할을 나누고 캠페인 구조를 설계하는 감각이 좋습니다.',
-      ],
-      improvements: [
-        '퍼포먼스 지표(CTR, CPA, ROAS 등)를 수치로 다루는 연습을 더해 보세요.',
-        '크리에이티브 테스트 결과를 기반으로 학습을 정리하는 습관을 들이면 좋습니다.',
-      ],
-      traits: [
-        { name: '전략적 사고', score: 85 },
-        { name: '데이터 해석', score: 70 },
-        { name: '소통·조율', score: 90 },
-        { name: '문제 해결', score: 82 },
-        { name: '리더십', score: 78 },
-        { name: '실행력', score: 88 },
-      ],
-      roadmap: [
-        '디지털 마케팅 기본 개념과 주요 지표를 정리하며 이론을 탄탄히 다져 보세요.',
-        '소규모 광고 캠페인 또는 개인 채널 운영을 통해 직접 테스트를 해 보세요.',
-        '브랜드/퍼포먼스 마케팅 인턴십에 지원해 실전 경험을 쌓아 보세요.',
-      ],
-    },
-  };
-
-  const profile = personalityProfiles[id] || personalityProfiles.pm;
-
-  // 레이더(육각형) 차트용 좌표 계산
-  const getRadarPoints = () => {
-    const centerX = 130;
-    const centerY = 130;
-    const maxRadius = 90;
-
-    return profile.traits
-      .map((trait, index) => {
-        const angle = (Math.PI * 2 * index) / profile.traits.length - Math.PI / 2;
-        const radius = (trait.score / 100) * maxRadius;
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-        return `${x},${y}`;
-      })
-      .join(' ');
-  };
-
-  // 리포트 모드일 때: 성장 리포트 화면으로 전환
-  if (isReport) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] p-6 font-sans">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 px-6 py-6 sm:px-10 sm:py-8">
-            {/* 상단 타이틀 */}
-            <div className="flex items-center justify-between gap-4 mb-8">
-              <div>
-                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-widest mb-1">
-                  최종 결과 리포트
-                </p>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-                  {profile.title} 시뮬레이션 완료!{' '}
-                  <span className="text-indigo-600">당신의 성장 잠재력은?</span>
-                </h1>
-              </div>
-              <Link
-                to="/simulation"
-                className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full border border-slate-200 text-xs text-slate-500 hover:bg-slate-50"
-              >
-                다른 직무 시뮬레이션 보기
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mb-8">
-              {/* 중앙: 육각형 레이더 차트 */}
-              <div className="lg:col-span-2 flex flex-col items-center justify-center">
-                <div className="w-full max-w-md mx-auto">
-                  <div className="relative bg-slate-50 rounded-3xl border border-slate-100 p-6">
-                    <p className="text-xs font-semibold text-slate-500 mb-3">
-                      Personality Fit · 성격 적합도 레이더
-                    </p>
-                    <div className="relative flex items-center justify-center">
-                      <svg width="260" height="260" viewBox="0 0 260 260">
-                        {/* 그리드용 기본 육각형 */}
-                        {[0.33, 0.66, 1].map((ratio, idx) => {
-                          const r = 90 * ratio;
-                          const points = profile.traits
-                            .map((_, index) => {
-                              const angle =
-                                (Math.PI * 2 * index) / profile.traits.length - Math.PI / 2;
-                              const x = 130 + r * Math.cos(angle);
-                              const y = 130 + r * Math.sin(angle);
-                              return `${x},${y}`;
-                            })
-                            .join(' ');
-                          return (
-                            <polygon
-                              // eslint-disable-next-line react/no-array-index-key
-                              key={idx}
-                              points={points}
-                              fill="none"
-                              stroke="#E2E8F0"
-                              strokeWidth="1"
-                            />
-                          );
-                        })}
-
-                        {/* 실제 점수 레이더 */}
-                        <polygon
-                          points={getRadarPoints()}
-                          fill="rgba(79, 70, 229, 0.18)"
-                          stroke="#4F46E5"
-                          strokeWidth="2"
-                        />
-
-                        {/* 축 라인 */}
-                        {profile.traits.map((_, index) => {
-                          const angle =
-                            (Math.PI * 2 * index) / profile.traits.length - Math.PI / 2;
-                          const x = 130 + 90 * Math.cos(angle);
-                          const y = 130 + 90 * Math.sin(angle);
-                          return (
-                            <line
-                              // eslint-disable-next-line react/no-array-index-key
-                              key={index}
-                              x1="130"
-                              y1="130"
-                              x2={x}
-                              y2={y}
-                              stroke="#E2E8F0"
-                              strokeWidth="1"
-                            />
-                          );
-                        })}
-                      </svg>
-
-                      {/* 항목 라벨 */}
-                      {profile.traits.map((trait, index) => {
-                        const angle =
-                          (Math.PI * 2 * index) / profile.traits.length - Math.PI / 2;
-                        const r = 110;
-                        const x = 130 + r * Math.cos(angle);
-                        const y = 130 + r * Math.sin(angle);
-                        return (
-                          <div
-                            // eslint-disable-next-line react/no-array-index-key
-                            key={index}
-                            className="absolute text-[10px] text-slate-600"
-                            style={{
-                              left: x,
-                              top: y,
-                              transform: 'translate(-50%, -50%)',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            <div>{trait.name}</div>
-                            <div className="font-semibold text-indigo-600">{trait.score}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 우측: 직무 적합도 요약 */}
-              <div className="flex flex-col justify-between bg-slate-50 rounded-3xl border border-slate-100 p-6">
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 mb-2">
-                    직무 적합도 요약
-                  </p>
-                  <p className="text-sm font-semibold text-slate-900 mb-1">
-                    당신은 이 직무에{' '}
-                    <span className="text-indigo-600">"{profile.fitLabel}"</span>한 인재입니다.
-                  </p>
-                  <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                    {profile.summary}
-                  </p>
-
-                  <div className="mb-4">
-                    <p className="text-xs font-semibold text-slate-500 mb-1">강점 포인트</p>
-                    <ul className="text-sm text-slate-600 space-y-1 list-disc list-inside">
-                      {profile.strengths.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-slate-500 mb-1">보완하면 좋은 점</p>
-                    <ul className="text-sm text-slate-600 space-y-1 list-disc list-inside">
-                      {profile.improvements.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsReport(false);
-                    setCurrentLevel(0);
-                    setAnswer('');
-                    setFeedback('');
-                    setShowNext(false);
-                    setError('');
-                  }}
-                  className="mt-6 w-full py-3 text-xs font-semibold text-slate-600 rounded-xl border border-slate-200 hover:bg-slate-100"
-                >
-                  다시 풀어보기
-                </button>
-              </div>
-            </div>
-
-            {/* 하단: 커리어 로드맵 */}
-            <div className="mt-4">
-              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-widest mb-2">
-                Career Roadmap
-              </p>
-              <h2 className="text-sm sm:text-base font-semibold text-slate-900 mb-4">
-                {profile.title}이 되기 위해 지금부터 할 수 있는 것들
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {profile.roadmap.map((step, index) => (
-                  <div
-                    key={step}
-                    className="bg-slate-50 rounded-2xl border border-slate-100 p-4 flex flex-col h-full"
-                  >
-                    <p className="text-xs font-semibold text-indigo-600 mb-2">
-                      단계 {index + 1}
-                    </p>
-                    <p className="text-sm text-slate-700 leading-relaxed">{step}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-6 font-sans">
+      {/* 전체 화면 로딩 오버레이 */}
+      {isLoading && loadingType && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm sm:text-base font-semibold text-white">
+              {loadingType === 'next'
+                ? '다음 단계로 이동 중...'
+                : 'PM 실무 역량 정밀 분석 중...'}
+            </p>
+          </div>
+        </div>
+      )}
       <div className="max-w-6xl mx-auto space-y-4">
         {/* 3. 아주 심플한 헤더 (002200 스타일) */}
         <div className="bg-white rounded-xl px-4 py-3 shadow-sm border border-slate-100 flex justify-between items-center">
@@ -490,13 +321,46 @@ export default function SimulationDetailPage() {
             </p>
 
             {/* AI 피드백 영역 */}
-            {feedback && (
-              <div className="mt-6 bg-slate-50 border border-indigo-100 rounded-xl p-4 text-sm text-slate-700 whitespace-pre-wrap">
+            {hasSubmitted ? (
+              <div className="mt-6 bg-slate-50 border border-indigo-100 rounded-2xl p-4 sm:p-5 text-sm text-slate-700">
                 <p className="text-xs font-semibold text-indigo-600 mb-2">
                   AI 실무진 분석 피드백
                 </p>
-                {feedback}
+                {isLoading && !aiFeedback && (
+                  <p className="text-xs text-slate-500">
+                    AI 심사위원이 답변을 정밀 분석 중입니다...
+                  </p>
+                )}
+                {!isLoading && aiFeedback && typeof aiFeedback === 'string' && (
+                  <p className="whitespace-pre-wrap">{aiFeedback}</p>
+                )}
+                {!isLoading && aiFeedback && typeof aiFeedback === 'object' && (
+                  <div className="space-y-3">
+                    <p className="font-semibold text-slate-800 whitespace-pre-wrap">
+                      {aiFeedback.summary}
+                    </p>
+                    {aiFeedback.items && aiFeedback.items.length > 0 && (
+                      <ul className="mt-1 space-y-1 text-xs sm:text-sm text-slate-700">
+                        {aiFeedback.items.map((it) => (
+                          <li key={it.label} className="flex gap-1">
+                            <span className="font-semibold text-slate-800 min-w-[80px]">
+                              {it.label}
+                            </span>
+                            <span className="text-slate-500">
+                              {it.score != null ? `${it.score}점 - ` : ''}
+                              {it.reason}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
+            ) : (
+              <p className="mt-6 text-xs text-slate-400">
+                답변을 제출하면 AI 심사위원이 루브릭을 기준으로 정밀 분석을 시작합니다.
+              </p>
             )}
           </div>
 
@@ -526,7 +390,7 @@ export default function SimulationDetailPage() {
                   disabled={isLoading}
                   className="w-full py-3.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                 >
-                  {isLoading ? 'AI가 분석 중입니다...' : '제출하기'}
+                  {isLoading ? '전문가 피드백 생성 중...' : '제출하기'}
                 </button>
               )}
 
@@ -537,7 +401,8 @@ export default function SimulationDetailPage() {
                     type="button"
                     onClick={() => {
                       setAnswer('');
-                      setFeedback('');
+                      setAiFeedback('');
+                      setHasSubmitted(false);
                       setShowNext(false);
                       setError('');
                     }}
@@ -547,7 +412,7 @@ export default function SimulationDetailPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={handleNextLevel}
+                    onClick={() => handleStepChange(isLastLevel ? 'analyze' : 'next')}
                     className="flex-1 py-3.5 bg-indigo-600 text-sm font-semibold text-white rounded-xl hover:bg-indigo-700 shadow-sm transition-all"
                   >
                     {isLastLevel ? '최종 역량 리포트 확인하기' : '다음 레벨 도전하기'}
