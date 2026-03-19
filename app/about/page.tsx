@@ -7,12 +7,12 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
           {/* 로고 & 서브타이틀 */}
           <div className="mb-10">
-            <a href="/" className="inline-flex items-baseline gap-2 group">
+            <p className="text-xs sm:text-sm text-indigo-600 font-semibold mb-2 tracking-tight">
+              자빅스(JOB-EX) 실전 직무 리허설, 자빅스(JOB-EX)
+            </p>
+            <a href="/" className="inline-block group">
               <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111827] group-hover:text-indigo-600 transition-colors">
                 자빅스(JOB-EX)
-              </span>
-              <span className="text-xs sm:text-sm text-slate-500">
-                실전 직무 리허설, 자빅스(JOB-EX)
               </span>
             </a>
           </div>
