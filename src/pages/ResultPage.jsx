@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Award, Download, Share2, Info } from 'lucide-react'
