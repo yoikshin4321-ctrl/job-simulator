@@ -116,6 +116,94 @@ function buildRoleFocus(roleId) {
   return '특히 비즈니스 로직의 타당성과 유저 가치(사용자 문제를 얼마나 잘 해결하는지)를 가장 중요하게 평가해.'
 }
 
+function buildRoleKoreanLabel(roleId) {
+  if (roleId === 'da') return '데이터 분석가 (Data Analyst)'
+  if (roleId === 'marketer') return '마케터 (Marketer)'
+  return 'PM (서비스/프로덕트 기획)'
+}
+
+/**
+ * 레벨(1~3)마다 15가지 출제 유형 풀이 있다고 가정하고, variantIndex(1~15)에 해당하는
+ * 스타일의 **새로운** 주관식 실무 과제를 생성한다. (JSON만 반환)
+ * {
+ *   domain, taskTitle, situation, requirements[], constraints[], variantIndex
+ * }
+ */
+export async function generateRandomSimulationTask({ roleId = 'pm', levelIndex = 1, variantIndex = 1 }) {
+  if (!OPENAI_API_KEY) {
+    if (typeof window !== 'undefined') {
+      alert('OpenAI API 키가 설정되어 있지 않습니다. .env의 VITE_OPENAI_API_KEY 값을 확인해 주세요.')
+    }
+    throw new Error('OPENAI API 키가 설정되어 있지 않습니다. .env에 VITE_OPENAI_API_KEY를 확인하세요.')
+  }
+
+  const roleLabel = buildRoleKoreanLabel(roleId)
+  const levelLabel =
+    levelIndex === 1 ? 'Level 1 기본' : levelIndex === 2 ? 'Level 2 중급' : 'Level 3 고급'
+
+  const systemPrompt =
+    '너는 커리어 체험 플랫폼 자빅스(JOB-EX)의 출제자야. ' +
+    '각 직무별·난이도별로 15가지 서로 다른 문제 유형(시나리오 축)이 있다고 가정하고, ' +
+    '지정된 유형 번호에 맞는 구체적이고 현실적인 주관식 과제를 한 세트만 생성해. ' +
+    '반드시 JSON만 출력해. (마크다운·코드펜스 금지)'
+
+  const userPrompt = [
+    `직무: ${roleLabel} (내부 코드: ${roleId})`,
+    `난이도: ${levelLabel} (step 번호 ${levelIndex})`,
+    `이번에 선택된 문제 유형 번호: ${variantIndex} / 15 (같은 유형이어도 매번 다른 디테일의 시나리오로 새로 작성)`,
+    '',
+    '도메인은 우선 Edutech(에듀테크)를 기본으로 하되, 직무에 더 자연스러운 도메인이 있으면 domain 필드에 그 도메인명을 한글 또는 영문으로 적어도 됨.',
+    '',
+    '과제 본문은 한국어로 작성하고, 다음 JSON 스키마를 정확히 따를 것:',
+    '{',
+    '  "domain": "string",',
+    '  "taskTitle": "string (예: Step 1 PM (서비스/프로덕트 기획) Level 1 기본 과제)",',
+    '  "situation": "string (한 문단 이상. 실제 업무 상황처럼 구체적으로.)",',
+    '  "requirements": ["요구사항1", "요구사항2", "요구사항3"],',
+    '  "constraints": ["제약조건1", "제약조건2"],',
+    `  "variantIndex": ${variantIndex}`,
+    '}',
+  ].join('\n')
+
+  const response = await axios.post(
+    OPENAI_API_URL,
+    {
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.85,
+      response_format: { type: 'json_object' },
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+    },
+  )
+
+  const content = response?.data?.choices?.[0]?.message?.content
+  if (!content) throw new Error('OpenAI 응답에서 내용을 찾을 수 없습니다.')
+
+  let parsed = null
+  try {
+    parsed = JSON.parse(content)
+  } catch (e) {
+    const match = content.match(/\{[\s\S]*\}/)
+    if (match) {
+      try {
+        parsed = JSON.parse(match[0])
+      } catch {
+        parsed = null
+      }
+    }
+  }
+
+  return { raw: content, parsed }
+}
+
 /**
  * 1~3단계 제출: 답변 분석 + 보완점 + 모범 답안(베스트 답변)을 단일 호출로 생성
  * 반환 스키마(가능한 한):
@@ -137,6 +225,7 @@ export async function analyzeSimulationStepWithOpenAI({
   taskTitle = '',
   situation = '',
   requirements = [],
+  constraints = [],
 }) {
   console.log('VITE_OPENAI_API_KEY loaded?', !!OPENAI_API_KEY)
 
@@ -159,6 +248,7 @@ export async function analyzeSimulationStepWithOpenAI({
     taskTitle ? `단계 과제 제목: ${taskTitle}` : '',
     situation ? `상황(Context): ${situation}` : '',
     requirements && requirements.length ? `요구사항:\n- ${requirements.join('\n- ')}` : '',
+    constraints && constraints.length ? `제약조건:\n- ${constraints.join('\n- ')}` : '',
     '',
     `사용자 답변:\n${answerText}`,
     '',
