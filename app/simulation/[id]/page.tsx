@@ -180,7 +180,7 @@ export default function SimulationDetailPage({
     void loadTaskForStep(1)
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (isResubmission = false) => {
     if (!answer.trim()) {
       setError('답안을 먼저 입력해 주세요.')
       return
@@ -198,6 +198,7 @@ export default function SimulationDetailPage({
         situation: currentTask.situation,
         requirements: currentTask.requirements,
         constraints: currentTask.constraints,
+        isResubmission,
       })
       setFeedbackParsed((parsed as Record<string, unknown>) || null)
       setHasSubmitted(true)
@@ -335,7 +336,9 @@ export default function SimulationDetailPage({
             </p>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">자빅스(JOB-EX) 실전 시뮬레이션</h1>
             <p className="mt-2 text-sm text-slate-600 max-w-2xl">
-              1~3단계는 주관식 제출 후 바로 AI 피드백과 모범 답안을 받고, 4단계에서 최종 리포트를 확인합니다.
+              1~3단계는 주관식 제출 후 바로 AI 피드백과 모범 답안을 받고, 피드백을 반영해 답안을 고친 뒤{' '}
+              <span className="font-semibold text-slate-800">다시 평가</span>할 수 있습니다. 4단계에서 최종 리포트를
+              확인합니다.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -443,14 +446,19 @@ export default function SimulationDetailPage({
                 placeholder="이 상황에서 당신이라면 어떻게 판단하고 행동할지, 구체적으로 작성해 보세요."
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                disabled={hasSubmitted}
               />
+              {hasSubmitted && (
+                <p className="text-xs text-slate-500">
+                  답안을 수정한 뒤 <span className="font-semibold text-slate-700">다시 평가 받기</span>를 누르면 새로
+                  채점합니다. 만족하면 아래에서 다음 단계로 진행하세요.
+                </p>
+              )}
               {error && currentTask && <p className="text-xs text-rose-600">{error}</p>}
 
               {!hasSubmitted && (
                 <button
                   type="button"
-                  onClick={() => void handleSubmit()}
+                  onClick={() => void handleSubmit(false)}
                   disabled={analyzing}
                   className="w-full py-3.5 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 shadow-sm disabled:opacity-60 transition-all"
                 >
@@ -460,14 +468,24 @@ export default function SimulationDetailPage({
 
               {hasSubmitted && (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => void goNextStep()}
-                    disabled={finalizing}
-                    className="w-full py-3.5 rounded-xl border-2 border-indigo-600 bg-indigo-50 text-indigo-800 text-sm font-bold hover:bg-indigo-100 transition-all disabled:opacity-60"
-                  >
-                    {flowStep < 3 ? '다음 단계로' : '최종 리포트 확인하기'}
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleSubmit(true)}
+                      disabled={analyzing || finalizing}
+                      className="flex-1 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-bold hover:bg-slate-50 transition-all disabled:opacity-60"
+                    >
+                      다시 평가 받기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void goNextStep()}
+                      disabled={finalizing || analyzing}
+                      className="flex-1 py-3.5 rounded-xl border-2 border-indigo-600 bg-indigo-50 text-indigo-800 text-sm font-bold hover:bg-indigo-100 transition-all disabled:opacity-60"
+                    >
+                      {flowStep < 3 ? '다음 단계로' : '최종 리포트 확인하기'}
+                    </button>
+                  </div>
 
                   <div className="mt-2 rounded-2xl border border-indigo-100 bg-slate-50/80 p-4 sm:p-5 space-y-4">
                     <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">AI 현직자 피드백</p>

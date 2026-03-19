@@ -123,6 +123,50 @@ function buildRoleKoreanLabel(roleId) {
 }
 
 /**
+ * 출제·채점 시 공통으로 쓰는 레벨별 난이도 기준 (1=기본, 2=중급, 3=고급)
+ */
+function getLevelDifficultyCriteria(levelIndex) {
+  const n = levelIndex === 2 ? 2 : levelIndex === 3 ? 3 : 1
+  if (n === 1) {
+    return {
+      label: 'Level 1 · 기본',
+      forTask: [
+        '한 가지 명확한 비즈니스/사용자 상황에 집중한다.',
+        '요구사항은 "상황 한 문장 요약 → 핵심 문제 정의 → 바로 실행 가능한 다음 액션 1~2가지" 수준으로 제한한다.',
+        '복수 이해관계자 간 큰 갈등, 분기별 로드맵, 통계적 실험 설계, 복잡한 수치 모델링은 다루지 않는다.',
+        '답변 분량은 실무에서 5~10문장 안에서 끝낼 수 있는 난이도로 과제를 설계한다.',
+      ],
+      forGrading:
+        '이번 제출은 Level 1(기본) 과제다. 핵심 상황 이해·문제 정의의 명확성·실행 가능한 다음 단계 제시를 우선 채점하고, Level 2~3에서 기대하는 실험/KPI 설계 수준까지 요구하지 마라.',
+    }
+  }
+  if (n === 2) {
+    return {
+      label: 'Level 2 · 중급',
+      forTask: [
+        '제한된 리소스·일정 안에서 트레이드오프가 드러나는 상황을 제시한다 (예: Must vs Nice, 채널·우선순위 갈등).',
+        '요구사항은 범위 우선순위, 이해관계자별 메시지/기대치 조율, 또는 지표 후보·대시보드 관점 중 2가지 이상을 포함한다.',
+        '단일 정답이 아닌, 근거를 들어 선택한 안을 설명해야 하는 구조로 만든다.',
+        'Level 1보다 문맥 정보가 많지만, 여전히 "한 번의 제출"로 논리적으로 완결될 수 있게 한다.',
+      ],
+      forGrading:
+        '이번 제출은 Level 2(중급) 과제다. 우선순위·트레이드오프·근거 제시(왜 이 선택인지)를 중점 채점하고, Level 3에서 요구하는 다층 실험 설계·리스크 정량화까지는 필수로 요구하지 마라.',
+    }
+  }
+  return {
+    label: 'Level 3 · 고급',
+    forTask: [
+      '성과 검증을 위한 KPI·가설·실험(또는 분석) 설계, 성공/실패 기준이 자연스럽게 포함되는 시나리오로 만든다.',
+      '단기 실행과 중기 학습(반복 개선)을 동시에 고려하게 할 것.',
+      '이해관계자(경영·제품·마케팅·운영 등) 관점 차이와 리스크를 드러낸다.',
+      '답변에는 측정 지표, 기간, 대상, 의사결정 포인트가 구체적으로 드러나야 한다.',
+    ],
+    forGrading:
+      '이번 제출은 Level 3(고급) 과제다. KPI·실험/분석 설계의 타당성, 가설·지표·성공 기준의 일관성, 리스크와 다음 액션의 구체성을 엄격히 채점하라.',
+  }
+}
+
+/**
  * 레벨(1~3)마다 15가지 출제 유형 풀이 있다고 가정하고, variantIndex(1~15)에 해당하는
  * 스타일의 **새로운** 주관식 실무 과제를 생성한다. (JSON만 반환)
  * {
@@ -140,6 +184,10 @@ export async function generateRandomSimulationTask({ roleId = 'pm', levelIndex =
   const roleLabel = buildRoleKoreanLabel(roleId)
   const levelLabel =
     levelIndex === 1 ? 'Level 1 기본' : levelIndex === 2 ? 'Level 2 중급' : 'Level 3 고급'
+  const diff = getLevelDifficultyCriteria(levelIndex)
+  const difficultyBlock = [`[${diff.label} 출제 기준 — 반드시 준수]`, ...diff.forTask.map((line) => `- ${line}`)].join(
+    '\n',
+  )
 
   const systemPrompt =
     '너는 커리어 체험 플랫폼 자빅스(JOB-EX)의 출제자야. ' +
@@ -151,6 +199,8 @@ export async function generateRandomSimulationTask({ roleId = 'pm', levelIndex =
     `직무: ${roleLabel} (내부 코드: ${roleId})`,
     `난이도: ${levelLabel} (step 번호 ${levelIndex})`,
     `이번에 선택된 문제 유형 번호: ${variantIndex} / 15 (같은 유형이어도 매번 다른 디테일의 시나리오로 새로 작성)`,
+    '',
+    difficultyBlock,
     '',
     '도메인은 우선 Edutech(에듀테크)를 기본으로 하되, 직무에 더 자연스러운 도메인이 있으면 domain 필드에 그 도메인명을 한글 또는 영문으로 적어도 됨.',
     '',
@@ -226,6 +276,7 @@ export async function analyzeSimulationStepWithOpenAI({
   situation = '',
   requirements = [],
   constraints = [],
+  isResubmission = false,
 }) {
   console.log('VITE_OPENAI_API_KEY loaded?', !!OPENAI_API_KEY)
 
@@ -237,6 +288,8 @@ export async function analyzeSimulationStepWithOpenAI({
   }
 
   const focus = buildRoleFocus(roleId)
+  const diff = getLevelDifficultyCriteria(stepNumber)
+  const gradingLine = diff.forGrading
 
   const systemPrompt =
     '너는 커리어 체험 플랫폼 자빅스(JOB-EX)의 실무 코치이자 채점자야. ' +
@@ -245,6 +298,10 @@ export async function analyzeSimulationStepWithOpenAI({
 
   const userPrompt = [
     `직무 관점: ${roleId} (${stepNumber}단계)`,
+    `난이도 채점 기준: ${gradingLine}`,
+    isResubmission
+      ? '이 답안은 이전에 받은 AI 피드백을 참고해 수정·재제출한 것이다. 개선된 점과 여전히 부족한 점을 improvements·각 항목 reason에 반영해 줘.'
+      : '',
     taskTitle ? `단계 과제 제목: ${taskTitle}` : '',
     situation ? `상황(Context): ${situation}` : '',
     requirements && requirements.length ? `요구사항:\n- ${requirements.join('\n- ')}` : '',
