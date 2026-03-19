@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 const AUTH_KEY = 'job_sim_auth'
@@ -13,7 +13,8 @@ export default function LoginPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const raw = localStorage.getItem(AUTH_KEY)
+    if (typeof window === 'undefined') return
+    const raw = window.localStorage.getItem(AUTH_KEY)
     if (!raw) return
     try {
       const parsed = JSON.parse(raw)
@@ -25,11 +26,13 @@ export default function LoginPage() {
     }
   }, [router])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    const raw = localStorage.getItem(AUTH_KEY)
+    if (typeof window === 'undefined') return
+
+    const raw = window.localStorage.getItem(AUTH_KEY)
     if (!raw) {
       setError('가입된 계정을 먼저 생성해 주세요.')
       return
@@ -38,7 +41,7 @@ export default function LoginPage() {
     try {
       const parsed = JSON.parse(raw)
       const users = parsed?.users || []
-      const found = users.find((u) => u.email === email.trim())
+      const found = users.find((u: any) => u.email === email.trim())
       if (!found || found.password !== password) {
         setError('이메일 또는 비밀번호가 올바르지 않습니다.')
         return
@@ -48,7 +51,7 @@ export default function LoginPage() {
         ...parsed,
         currentUser: { email: found.email, name: found.name },
       }
-      localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+      window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
       router.replace('/')
     } catch {
       setError('로그인 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
@@ -102,7 +105,7 @@ export default function LoginPage() {
         </form>
         <p className="mt-4 text-xs text-slate-500 text-center">
           아직 계정이 없다면{' '}
-          <Link to="/signup" className="font-semibold text-indigo-600 hover:text-indigo-700">
+          <Link href="/signup" className="font-semibold text-indigo-600 hover:text-indigo-700">
             회원가입
           </Link>
           을 먼저 진행해 주세요.
