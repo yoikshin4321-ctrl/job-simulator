@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] w-full">
@@ -7,14 +5,14 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
           {/* 로고 & 서브타이틀 */}
           <div className="mb-10">
-            <Link to="/" className="inline-flex items-baseline gap-2 group">
+            <a href="/" className="inline-flex items-baseline gap-2 group">
               <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111827] group-hover:text-indigo-600 transition-colors">
                 자빅스(JOB-EX)
               </span>
               <span className="text-xs sm:text-sm text-slate-500">
                 실전 직무 리허설, 자빅스(JOB-EX)
               </span>
-            </Link>
+            </a>
           </div>
 
           {/* 메인 카피 */}
@@ -111,12 +109,12 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="flex gap-2">
-              <Link
-                to="/simulation"
+              <a
+                href="/simulation"
                 className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-xs sm:text-sm font-semibold hover:bg-indigo-700 transition-all"
               >
                 시뮬레이션 체험하기
-              </Link>
+              </a>
               <button
                 type="button"
                 className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all"
