@@ -30,9 +30,9 @@ export default function Footer() {
               <Link href="/about" className={linkClass}>
                 회사소개
               </Link>
-              <a href="#" className={linkClass}>
-                인재 채용
-              </a>
+              <Link href="/partners" className={linkClass}>
+                대학/기업용 서비스
+              </Link>
               <a href="#" className={linkClass}>
                 공지사항
               </a>

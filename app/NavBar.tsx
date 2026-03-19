@@ -82,7 +82,7 @@ export default function NavBar() {
             <Link href="/simulation" className={linkClass('/simulation')}>
               시뮬레이션
             </Link>
-            <Link href="/about" className={linkClass('/about')}>
+            <Link href="/partners" className={linkClass('/partners')}>
               대학/기업용 서비스
             </Link>
           </nav>
