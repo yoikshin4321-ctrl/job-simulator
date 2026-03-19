@@ -1,11 +1,11 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
-import { analyzeAnswerWithOpenAI } from '../api/openai';
+import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { analyzeAnswerWithOpenAI } from '../../../src/api/openai'
 
-// 1. 점진적 난이도의 3단계 문제 데이터
+// 기존 SIMULATION_DATA, 컴포넌트 로직은 src/pages/SimulationDetailPage.jsx에서 그대로 가져옴
 const SIMULATION_DATA = {
   pm: {
     id: 'pm',
@@ -82,225 +82,197 @@ const SIMULATION_DATA = {
       },
     ],
   },
-};
+}
 
-export default function SimulationDetailPage() {
-  const router = useRouter();
-  const rawId = router.query.id;
-  const id = (Array.isArray(rawId) ? rawId[0] : rawId || 'pm').toLowerCase();
-  const roleData = SIMULATION_DATA[id] || SIMULATION_DATA.pm;
+export default function SimulationDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter()
+  const id = (params.id || 'pm').toLowerCase()
+  const roleData = SIMULATION_DATA[id as keyof typeof SIMULATION_DATA] || SIMULATION_DATA.pm
 
-  // 2. 단계별 진행 로직 상태
-  const [currentLevel, setCurrentLevel] = useState(0); // 0,1,2 => Level 1,2,3
-  const [answer, setAnswer] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingType, setLoadingType] = useState(null); // 'next' | 'analyze' | null
-  // aiFeedback: null | string(raw) | { summary: string, items: { label, score, reason }[] }
-  const [aiFeedback, setAiFeedback] = useState(null);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [showNext, setShowNext] = useState(false);
-  const [error, setError] = useState('');
+  const [currentLevel, setCurrentLevel] = useState(0)
+  const [answer, setAnswer] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingType, setLoadingType] = useState<'next' | 'analyze' | null>(null)
+  const [aiFeedback, setAiFeedback] = useState<any>(null)
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+  const [showNext, setShowNext] = useState(false)
+  const [error, setError] = useState('')
 
-  const levelData = roleData.levels[currentLevel];
-  const isLastLevel = currentLevel === roleData.levels.length - 1;
+  const levelData = roleData.levels[currentLevel]
+  const isLastLevel = currentLevel === roleData.levels.length - 1
 
   const fetchAICheck = async (advanceAfter = false) => {
-    console.log('AI 호출 시작', answer);
-
     if (!answer.trim()) {
-      setError('답안을 먼저 입력해 주세요.');
-      return;
+      setError('답안을 먼저 입력해 주세요.')
+      return
     }
 
-    setError('');
-    setIsLoading(true);
-    setHasSubmitted(true);
+    setError('')
+    setIsLoading(true)
+    setHasSubmitted(true)
 
     try {
-      const { raw, parsed } = await analyzeAnswerWithOpenAI(answer, id);
-      console.log('AI 응답 원본:', raw, parsed);
+      const { raw, parsed } = await analyzeAnswerWithOpenAI(answer, id)
 
-      let structured = parsed;
+      let structured: any = parsed
 
-      // 혹시 parsed가 비어 있고 raw만 온 경우, 한 번 더 파싱 시도
       if (!structured && raw) {
         try {
-          structured = JSON.parse(raw);
+          structured = JSON.parse(raw)
         } catch {
-          structured = null;
+          structured = null
         }
       }
 
       if (structured && typeof structured === 'object') {
         const items = Object.entries(structured)
-          .map(([label, value]) => {
-            if (!value || typeof value !== 'object') return null;
-            const score = value.score ?? value.점수 ?? null;
-            const reason = value.reason ?? value.평가이유 ?? value.feedback ?? '';
-            if (!reason && score == null) return null;
-            return { label, score, reason };
+          .map(([label, value]: any) => {
+            if (!value || typeof value !== 'object') return null
+            const score = value.score ?? value.점수 ?? null
+            const reason = value.reason ?? value.평가이유 ?? value.feedback ?? ''
+            if (!reason && score == null) return null
+            return { label, score, reason }
           })
-          .filter(Boolean);
+          .filter(Boolean)
 
         const summary =
-          items.length > 0
-            ? items
-                .map((it) => `${it.label}: ${it.reason}`)
-                .join(' ')
-            : raw || '';
+          items.length > 0 ? items.map((it: any) => `${it.label}: ${it.reason}`).join(' ') : raw || ''
 
-        setAiFeedback({ summary, items });
+        setAiFeedback({ summary, items })
       } else {
-        // 구조화에 실패한 경우, 일단 원본 텍스트를 그대로 보여준다
-        setAiFeedback(raw || '');
+        setAiFeedback(raw || '')
       }
 
-      // 단계별 누적 데이터 저장
-      const historyKey = 'job_sim_ai_history';
-      try {
-        const rawHistory = localStorage.getItem(historyKey);
-        const parsedHistory = rawHistory ? JSON.parse(rawHistory) : [];
-        const nextHistory = [
-          ...parsedHistory,
-          {
-            roleId: id,
-            levelIndex: currentLevel,
-            levelLabel: levelData.label,
-            answer,
-            result: structured || null,
-            analyzedAt: new Date().toISOString(),
-          },
-        ];
-        localStorage.setItem(historyKey, JSON.stringify(nextHistory));
-      } catch {
-        // history 저장 실패는 치명적이지 않으므로 무시
+      if (typeof window !== 'undefined') {
+        const historyKey = 'job_sim_ai_history'
+        try {
+          const rawHistory = window.localStorage.getItem(historyKey)
+          const parsedHistory = rawHistory ? JSON.parse(rawHistory) : []
+          const nextHistory = [
+            ...parsedHistory,
+            {
+              roleId: id,
+              levelIndex: currentLevel,
+              levelLabel: levelData.label,
+              answer,
+              result: structured || null,
+              analyzedAt: new Date().toISOString(),
+            },
+          ]
+          window.localStorage.setItem(historyKey, JSON.stringify(nextHistory))
+        } catch {
+          // ignore
+        }
       }
 
-      setShowNext(true);
+      setShowNext(true)
 
       if (advanceAfter) {
         if (isLastLevel) {
-          // 최종 종합 분석용 데이터는 마지막 단계 결과 기준으로 저장
-          const payload = {
-            roleId: id,
-            levelsCompleted: currentLevel + 1,
-            answer,
-            result: structured || null,
-            analyzedAt: new Date().toISOString(),
-          };
-          localStorage.setItem('job_sim_ai_result', JSON.stringify(payload));
-          router.replace('/result');
-          return;
+          if (typeof window !== 'undefined') {
+            const payload = {
+              roleId: id,
+              levelsCompleted: currentLevel + 1,
+              answer,
+              result: structured || null,
+              analyzedAt: new Date().toISOString(),
+            }
+            window.localStorage.setItem('job_sim_ai_result', JSON.stringify(payload))
+          }
+          router.replace('/result')
+          return
         }
 
-        // 다음 레벨로 이동
-        setCurrentLevel((prev) => Math.min(prev + 1, roleData.levels.length - 1));
-        setAnswer('');
-        setAiFeedback(null);
-        setShowNext(false);
-        setError('');
+        setCurrentLevel((prev) => Math.min(prev + 1, roleData.levels.length - 1))
+        setAnswer('')
+        setAiFeedback(null)
+        setShowNext(false)
+        setError('')
       }
-    } catch (e) {
-      console.error(e);
-      // 에러 정보를 결과 페이지에서도 참고할 수 있도록 저장
+    } catch (e: any) {
       try {
-        localStorage.setItem(
-          'job_sim_ai_result_error',
-          JSON.stringify({ message: e?.message || '알 수 없는 오류가 발생했습니다.' }),
-        );
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(
+            'job_sim_ai_result_error',
+            JSON.stringify({ message: e?.message || '알 수 없는 오류가 발생했습니다.' }),
+          )
+        }
       } catch {
         // ignore
       }
-      setError('AI 분석에 실패했습니다. API 키를 확인해주세요.');
+      setError('AI 분석에 실패했습니다. API 키를 확인해주세요.')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleSubmit = async () => {
-    // 단일 단계 분석만 수행 (오버레이는 띄우지 않음)
-    await fetchAICheck(false);
-  };
+    await fetchAICheck(false)
+  }
 
-  const handleStepChange = async (mode) => {
+  const handleStepChange = async (mode: 'next' | 'analyze') => {
     if (!answer.trim()) {
-      setError('답안을 먼저 입력해 주세요.');
-      return;
+      setError('답안을 먼저 입력해 주세요.')
+      return
     }
 
     if (mode === 'next' && isLastLevel) {
-      // 마지막 단계에서는 분석 모드로만 이동
-      mode = 'analyze';
+      mode = 'analyze'
     }
 
     if (mode === 'next') {
-      setLoadingType('next');
-      setIsLoading(true);
-      // 0.8초 정도의 단계 전환 로딩 후 다음 단계로 이동
+      setLoadingType('next')
+      setIsLoading(true)
       setTimeout(async () => {
-        await fetchAICheck(true);
-        setIsLoading(false);
-        setLoadingType(null);
-      }, 800);
+        await fetchAICheck(true)
+        setIsLoading(false)
+        setLoadingType(null)
+      }, 800)
     } else if (mode === 'analyze') {
-      setLoadingType('analyze');
-      setIsLoading(true);
-      const start = Date.now();
-      await fetchAICheck(true);
-      const elapsed = Date.now() - start;
-      const remain = 2500 - elapsed;
+      setLoadingType('analyze')
+      setIsLoading(true)
+      const start = Date.now()
+      await fetchAICheck(true)
+      const elapsed = Date.now() - start
+      const remain = 2500 - elapsed
       if (remain > 0) {
         setTimeout(() => {
-          setIsLoading(false);
-          setLoadingType(null);
-        }, remain);
+          setIsLoading(false)
+          setLoadingType(null)
+        }, remain)
       } else {
-        setIsLoading(false);
-        setLoadingType(null);
+        setIsLoading(false)
+        setLoadingType(null)
       }
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-6 font-sans">
-      {/* 전체 화면 로딩 오버레이 */}
       {isLoading && loadingType && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md">
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin" />
             <p className="text-sm sm:text-base font-semibold text-white">
-              {loadingType === 'next'
-                ? '다음 단계로 이동 중...'
-                : 'PM 실무 역량 정밀 분석 중...'}
+              {loadingType === 'next' ? '다음 단계로 이동 중...' : 'PM 실무 역량 정밀 분석 중...'}
             </p>
           </div>
         </div>
       )}
       <div className="max-w-6xl mx-auto space-y-4">
-        {/* 3. 아주 심플한 헤더 (002200 스타일) */}
         <div className="bg-white rounded-xl px-4 py-3 shadow-sm border border-slate-100 flex justify-between items-center">
           <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-sm sm:text-base font-bold text-indigo-600 truncate">
-              {roleData.title}
-            </h1>
+            <h1 className="text-sm sm:text-base font-bold text-indigo-600 truncate">{roleData.title}</h1>
             <span className="text-slate-300">|</span>
-            <p className="text-xs sm:text-sm text-slate-600 truncate">
-              {roleData.slogan}
-            </p>
+            <p className="text-xs sm:text-sm text-slate-600 truncate">{roleData.slogan}</p>
           </div>
-          <Link
-            to="/simulation"
-            className="text-xs text-slate-400 hover:text-indigo-600 whitespace-nowrap"
-          >
+          <Link href="/simulation" className="text-xs text-slate-400 hover:text-indigo-600 whitespace-nowrap">
             ← 다른 직무 선택
           </Link>
         </div>
 
-        {/* 메인 영역: 좌측 지문 / 우측 답안 작성 */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden flex flex-col md:flex-row min-h-[520px]">
-          {/* 좌측: 지문 영역 */}
           <div className="flex-1 px-8 py-8 space-y-4 bg-white">
-            {/* 상단: 현재 레벨 / 난이도 요약 */}
             <div className="flex items-center justify-between mb-2">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
                 {levelData.label}
@@ -310,12 +282,8 @@ export default function SimulationDetailPage() {
               </span>
             </div>
 
-            {/* 직무명 | 레벨 제목 (간단 헤더) */}
-            <p className="text-sm font-semibold text-slate-700">
-              {roleData.title} | 단계별 실무 과제
-            </p>
+            <p className="text-sm font-semibold text-slate-700">{roleData.title} | 단계별 실무 과제</p>
 
-            {/* 레이블 없이 지문만 깔끔하게 노출 */}
             <p className="mt-3 text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
               {levelData.summary}
             </p>
@@ -323,32 +291,23 @@ export default function SimulationDetailPage() {
               {levelData.description}
             </p>
 
-            {/* AI 피드백 영역 */}
             {hasSubmitted ? (
               <div className="mt-6 bg-slate-50 border border-indigo-100 rounded-2xl p-4 sm:p-5 text-sm text-slate-700">
-                <p className="text-xs font-semibold text-indigo-600 mb-2">
-                  AI 실무진 분석 피드백
-                </p>
+                <p className="text-xs font-semibold text-indigo-600 mb-2">AI 실무진 분석 피드백</p>
                 {isLoading && !aiFeedback && (
-                  <p className="text-xs text-slate-500">
-                    AI 심사위원이 답변을 정밀 분석 중입니다...
-                  </p>
+                  <p className="text-xs text-slate-500">AI 심사위원이 답변을 정밀 분석 중입니다...</p>
                 )}
                 {!isLoading && aiFeedback && typeof aiFeedback === 'string' && (
                   <p className="whitespace-pre-wrap">{aiFeedback}</p>
                 )}
                 {!isLoading && aiFeedback && typeof aiFeedback === 'object' && (
                   <div className="space-y-3">
-                    <p className="font-semibold text-slate-800 whitespace-pre-wrap">
-                      {aiFeedback.summary}
-                    </p>
+                    <p className="font-semibold text-slate-800 whitespace-pre-wrap">{aiFeedback.summary}</p>
                     {aiFeedback.items && aiFeedback.items.length > 0 && (
                       <ul className="mt-1 space-y-1 text-xs sm:text-sm text-slate-700">
-                        {aiFeedback.items.map((it) => (
+                        {aiFeedback.items.map((it: any) => (
                           <li key={it.label} className="flex gap-1">
-                            <span className="font-semibold text-slate-800 min-w-[80px]">
-                              {it.label}
-                            </span>
+                            <span className="font-semibold text-slate-800 min-w-[80px]">{it.label}</span>
                             <span className="text-slate-500">
                               {it.score != null ? `${it.score}점 - ` : ''}
                               {it.reason}
@@ -367,7 +326,6 @@ export default function SimulationDetailPage() {
             )}
           </div>
 
-          {/* 우측: 답안 작성 영역 */}
           <div className="w-full md:w-[360px] bg-slate-50/60 p-6 md:p-8 border-t md:border-t-0 md:border-l border-slate-100 flex flex-col gap-4">
             <div className="flex-1 flex flex-col">
               <h2 className="text-sm font-semibold text-slate-800 mb-2">답안 작성</h2>
@@ -385,7 +343,6 @@ export default function SimulationDetailPage() {
             </div>
 
             <div className="space-y-3">
-              {/* 아직 피드백 전: 제출 버튼만 노출 */}
               {!showNext && (
                 <button
                   type="button"
@@ -397,17 +354,16 @@ export default function SimulationDetailPage() {
                 </button>
               )}
 
-              {/* 피드백 후: 다시 도전하기 / 다음 레벨 (또는 최종 리포트) */}
               {showNext && (
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => {
-                      setAnswer('');
-                      setAiFeedback('');
-                      setHasSubmitted(false);
-                      setShowNext(false);
-                      setError('');
+                      setAnswer('')
+                      setAiFeedback('')
+                      setHasSubmitted(false)
+                      setShowNext(false)
+                      setError('')
                     }}
                     className="flex-1 py-3.5 bg-white text-sm font-semibold text-indigo-600 rounded-xl border border-indigo-600 hover:bg-indigo-50 transition-all"
                   >
@@ -427,5 +383,6 @@ export default function SimulationDetailPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
+
