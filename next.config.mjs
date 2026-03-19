@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: new URL('.', import.meta.url).pathname,
+  env: {
+    VITE_OPENAI_API_KEY: process.env.VITE_OPENAI_API_KEY,
+  },
   typescript: {
     ignoreBuildErrors: true, // 타입 에러가 있어도 빌드를 끝까지 진행
   },

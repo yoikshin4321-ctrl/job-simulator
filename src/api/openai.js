@@ -1,6 +1,15 @@
 import axios from 'axios'
 
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY
+// Vercel(Next) + Vite 환경 모두에서 안전하게 동작하도록 env 접근을 방어적으로 처리
+// 1순위: Node/Next 서버의 process.env.VITE_OPENAI_API_KEY
+// 2순위: Vite 클라이언트의 import.meta.env.VITE_OPENAI_API_KEY
+// 그 외: 빈 문자열
+const OPENAI_API_KEY =
+  (typeof process !== 'undefined' && process.env && process.env.VITE_OPENAI_API_KEY) ||
+  (typeof import.meta !== 'undefined' &&
+    import.meta.env &&
+    import.meta.env.VITE_OPENAI_API_KEY) ||
+  ''
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions'
 
 /**
