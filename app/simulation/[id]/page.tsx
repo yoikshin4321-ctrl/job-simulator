@@ -1,6 +1,6 @@
 'use client'
 
-import React, { use, useEffect, useState, use } from 'react'
+import React, { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { analyzeAnswerWithOpenAI } from '../../../src/api/openai'
