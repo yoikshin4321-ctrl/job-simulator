@@ -1,6 +1,6 @@
 'use client'
 
-import React, { use, useState } from 'react'
+import React, { use, useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { analyzeAnswerWithOpenAI } from '../../../src/api/openai'
@@ -103,6 +103,14 @@ export default function SimulationDetailPage({
   const { id: rawId } = useRouteParams(params)
   const id = (rawId || 'pm').toLowerCase()
   const roleData = SIMULATION_DATA[id as keyof typeof SIMULATION_DATA] || SIMULATION_DATA.pm
+
+  // 최초 진입 시 "문제 세팅 중" 로딩 레이어를 잠시 보여줌 (Vite 버전 UX와 동일하게)
+  const [initialLoading, setInitialLoading] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setInitialLoading(false), 800)
+    return () => clearTimeout(timer)
+  }, [])
 
   const [currentLevel, setCurrentLevel] = useState(0)
   const [answer, setAnswer] = useState('')
@@ -264,6 +272,14 @@ export default function SimulationDetailPage({
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-6 font-sans">
+      {initialLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm sm:text-base font-semibold text-white">문제를 불러오는 중입니다…</p>
+          </div>
+        </div>
+      )}
       {isLoading && loadingType && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md">
           <div className="flex flex-col items-center gap-4">
