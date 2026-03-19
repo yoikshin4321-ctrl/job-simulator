@@ -1,6 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/* Legacy JS config: content paths (app/, src/, components/) */
+@config '../tailwind.config.cjs';
 
 /* Base layout/theme variables ported from src/index.css for Next app */
 :root {

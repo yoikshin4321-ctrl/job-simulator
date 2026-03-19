@@ -1,6 +1,8 @@
-export default {
+/** Tailwind CSS v4 + Next.js — must use @tailwindcss/postcss (not legacy `tailwindcss` plugin) */
+const config = {
   plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
+    '@tailwindcss/postcss': {},
   },
 }
+
+export default config

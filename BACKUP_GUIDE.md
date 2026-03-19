@@ -26,7 +26,7 @@ job simulator/
 ├── package.json   ← 반드시
 ├── package-lock.json
 ├── vite.config.js
-├── tailwind.config.js
+├── tailwind.config.cjs
 ├── postcss.config.js
 ├── eslint.config.js
 ├── .gitignore
