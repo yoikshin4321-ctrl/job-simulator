@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { Award, Download, Share2, Info } from 'lucide-react'
 
 const STORAGE_KEY = 'job_sim_ai_result'
@@ -149,7 +149,7 @@ export default function ResultPage() {
             </p>
           )}
           <Link
-            to="/simulation"
+            href="/simulation"
             className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs sm:text-sm font-semibold hover:bg-indigo-700 transition-all"
           >
             시뮬레이션 다시 진행하기
@@ -369,7 +369,7 @@ export default function ResultPage() {
 
             <div className="mt-auto text-right">
               <Link
-                to="/simulation"
+                href="/simulation"
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-700 text-[11px] sm:text-xs text-slate-300 hover:bg-slate-800 hover:border-slate-500 transition-all"
               >
                 다른 직무 시뮬레이션 도전하기

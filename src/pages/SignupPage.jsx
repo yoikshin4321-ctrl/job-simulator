@@ -1,14 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useRouter } from 'next/router'
+import Link from 'next/link'
 
 const AUTH_KEY = 'job_sim_auth'
 
 const INTEREST_OPTIONS = ['PM', '데이터 분석', '마케팅', '디자인']
 
 export default function SignupPage() {
-  const navigate = useNavigate()
+  const router = useRouter()
   const [step, setStep] = useState(1)
 
   // Step 1 - 기본 정보
@@ -32,12 +33,12 @@ export default function SignupPage() {
     try {
       const parsed = JSON.parse(raw)
       if (parsed?.currentUser) {
-        navigate('/', { replace: true })
+        router.replace('/')
       }
     } catch {
       // ignore
     }
-  }, [navigate])
+  }, [router])
 
   const toggleInterest = (label) => {
     setInterests((prev) =>
@@ -109,7 +110,7 @@ export default function SignupPage() {
     }
 
     localStorage.setItem(AUTH_KEY, JSON.stringify(next))
-    navigate('/', { replace: true })
+    router.replace('/')
   }
 
   const progress = (step / 3) * 100
@@ -318,7 +319,7 @@ export default function SignupPage() {
             <div className="pt-2 flex items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={step === 1 ? () => navigate('/login') : handlePrev}
+                onClick={step === 1 ? () => router.push('/login') : handlePrev}
                 className="px-3 sm:px-4 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all"
               >
                 {step === 1 ? '이미 계정이 있어요' : '이전 단계'}

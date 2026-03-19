@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import {
   Brain,
   Sparkles,
@@ -491,7 +491,7 @@ export default function ExplorePage() {
               {/* CTA */}
               <div className="pt-2">
                 <Link
-                  to={`/simulation/${selectedId}`}
+                  href={`/simulation/${selectedId}`}
                   className="flex items-center justify-center gap-2 w-full py-4 px-6 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 shadow-sm transition-colors"
                 >
                   <BarChart3 className="w-5 h-5" />

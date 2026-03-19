@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { analyzeAnswerWithOpenAI } from '../api/openai';
 
 // 1. 점진적 난이도의 3단계 문제 데이터
@@ -84,10 +85,10 @@ const SIMULATION_DATA = {
 };
 
 export default function SimulationDetailPage() {
-  const params = useParams();
-  const id = (params.id || 'pm').toLowerCase();
+  const router = useRouter();
+  const rawId = router.query.id;
+  const id = (Array.isArray(rawId) ? rawId[0] : rawId || 'pm').toLowerCase();
   const roleData = SIMULATION_DATA[id] || SIMULATION_DATA.pm;
-  const navigate = useNavigate();
 
   // 2. 단계별 진행 로직 상태
   const [currentLevel, setCurrentLevel] = useState(0); // 0,1,2 => Level 1,2,3
@@ -188,7 +189,7 @@ export default function SimulationDetailPage() {
             analyzedAt: new Date().toISOString(),
           };
           localStorage.setItem('job_sim_ai_result', JSON.stringify(payload));
-          navigate('/result', { replace: true });
+          router.replace('/result');
           return;
         }
 

@@ -1,6 +1,7 @@
 'use client'
 
-import { useSearchParams, Link } from 'react-router-dom'
+import { useRouter } from 'next/router'
+import Link from 'next/link'
 import {
   Sparkles,
   BookOpen,
@@ -82,8 +83,9 @@ const RECOMMENDATIONS = {
 }
 
 export default function ReportPage() {
-  const [searchParams] = useSearchParams()
-  const role = searchParams.get('role') || 'pm'
+  const router = useRouter()
+  const rawRole = router.query.role
+  const role = (Array.isArray(rawRole) ? rawRole[0] : rawRole) || 'pm'
   const data = ROLE_DATA[role] || ROLE_DATA.pm
   const recommendations = RECOMMENDATIONS[role] || RECOMMENDATIONS.pm
 
@@ -233,7 +235,7 @@ export default function ReportPage() {
         {/* CTA */}
         <div className="mt-10 text-center">
           <Link
-            to="/simulation"
+            href="/simulation"
             className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-2xl hover:bg-indigo-700 transition-colors"
           >
             다른 직무 시뮬레이션 도전하기

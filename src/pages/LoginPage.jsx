@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useRouter } from 'next/router'
+import Link from 'next/link'
 
 const AUTH_KEY = 'job_sim_auth'
 
 export default function LoginPage() {
-  const navigate = useNavigate()
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -17,12 +18,12 @@ export default function LoginPage() {
     try {
       const parsed = JSON.parse(raw)
       if (parsed?.currentUser) {
-        navigate('/', { replace: true })
+        router.replace('/')
       }
     } catch {
       // ignore parse error
     }
-  }, [navigate])
+  }, [router])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -48,7 +49,7 @@ export default function LoginPage() {
         currentUser: { email: found.email, name: found.name },
       }
       localStorage.setItem(AUTH_KEY, JSON.stringify(next))
-      navigate('/', { replace: true })
+      router.replace('/')
     } catch {
       setError('로그인 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
     }
