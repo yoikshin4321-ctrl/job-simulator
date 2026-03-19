@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { Database, Brain, Target, Compass, PlayCircle, FileBarChart, ArrowRight, Handshake } from 'lucide-react'
 
 const AUTH_KEY = 'job_sim_auth'
@@ -85,15 +85,15 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <Link
-                to="/simulation"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-500 transition-all shadow-md hover:shadow-lg"
+              href="/simulation"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-500 transition-all shadow-md hover:shadow-lg"
               >
                 지금 바로 시뮬레이션 시작하기
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
-                to="/about"
-                className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-white text-slate-800 font-semibold rounded-2xl border border-slate-200 hover:border-indigo-200 hover:text-indigo-700 hover:shadow-md transition-all"
+              href="/about"
+              className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-white text-slate-800 font-semibold rounded-2xl border border-slate-200 hover:border-indigo-200 hover:text-indigo-700 hover:shadow-md transition-all"
               >
                 대학/기업용 서비스 보기
               </Link>
@@ -164,8 +164,8 @@ export default function HomePage() {
                 </p>
               </div>
               <Link
-                to="/simulation"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-slate-900 text-white text-xs sm:text-sm font-semibold hover:bg-slate-800 shadow-sm hover:shadow-md transition-all"
+              href="/simulation"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-slate-900 text-white text-xs sm:text-sm font-semibold hover:bg-slate-800 shadow-sm hover:shadow-md transition-all"
               >
                 맞춤 시뮬레이션 보러가기
                 <ArrowRight className="w-4 h-4 ml-1" />
@@ -325,7 +325,7 @@ export default function HomePage() {
               return (
               <div key={step.label} className="flex flex-col md:flex-row items-center justify-center flex-1 text-center">
                 <Link
-                  to={step.path}
+                  href={step.path}
                   className="flex flex-col items-center text-center group"
                 >
                   <div className="w-16 h-16 rounded-2xl bg-[#F8FAFC] border-2 border-slate-200 flex items-center justify-center mb-4 group-hover:border-indigo-300 group-hover:bg-indigo-50/50 transition-colors shadow-sm">
@@ -359,8 +359,8 @@ export default function HomePage() {
               실무 시뮬레이션으로 역량을 점검하고, AI 피드백으로 다음 단계를 준비하세요.
             </p>
             <Link
-              to="/simulation"
-              className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-[#1E293B] text-white font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-sm"
+                href="/simulation"
+                className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-[#1E293B] text-white font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-sm"
             >
               시뮬레이션 시작하기
               <ArrowRight className="w-5 h-5" />
@@ -394,7 +394,7 @@ export default function HomePage() {
                 <ul className="space-y-1">
                   <li>
                     <Link
-                      to="/about"
+                      href="/about"
                       className="hover:text-indigo-600 transition-colors"
                     >
                       회사소개
