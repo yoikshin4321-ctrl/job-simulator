@@ -4,8 +4,11 @@ import axios from 'axios'
 // 1순위: Node/Next 서버의 process.env.VITE_OPENAI_API_KEY
 // 2순위: Vite 클라이언트의 import.meta.env.VITE_OPENAI_API_KEY
 // 그 외: 빈 문자열
+// Next.js 클라이언트 번들: Vercel에는 NEXT_PUBLIC_* 만 노출됨 → 동일 키를 양쪽 이름으로 설정 가능
 const OPENAI_API_KEY =
-  (typeof process !== 'undefined' && process.env && process.env.VITE_OPENAI_API_KEY) ||
+  (typeof process !== 'undefined' &&
+    process.env &&
+    (process.env.NEXT_PUBLIC_VITE_OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY)) ||
   (typeof import.meta !== 'undefined' &&
     import.meta.env &&
     import.meta.env.VITE_OPENAI_API_KEY) ||

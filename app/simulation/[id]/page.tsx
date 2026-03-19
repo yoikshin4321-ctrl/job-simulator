@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { use, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { analyzeAnswerWithOpenAI } from '../../../src/api/openai'
@@ -84,9 +84,24 @@ const SIMULATION_DATA = {
   },
 }
 
-export default function SimulationDetailPage({ params }: { params: { id: string } }) {
+type SimParams = { id: string }
+
+/** Next.js 15+: `params` is a Promise; unwrap with `use()` in Client Components */
+function useRouteParams(params: Promise<SimParams> | SimParams): SimParams {
+  if (params != null && typeof (params as Promise<SimParams>).then === 'function') {
+    return use(params as Promise<SimParams>)
+  }
+  return params as SimParams
+}
+
+export default function SimulationDetailPage({
+  params,
+}: {
+  params: Promise<SimParams> | SimParams
+}) {
   const router = useRouter()
-  const id = (params.id || 'pm').toLowerCase()
+  const { id: rawId } = useRouteParams(params)
+  const id = (rawId || 'pm').toLowerCase()
   const roleData = SIMULATION_DATA[id as keyof typeof SIMULATION_DATA] || SIMULATION_DATA.pm
 
   const [currentLevel, setCurrentLevel] = useState(0)
