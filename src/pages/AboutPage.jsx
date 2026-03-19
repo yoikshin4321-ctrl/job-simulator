@@ -1,3 +1,5 @@
+'use client'
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] w-full">
