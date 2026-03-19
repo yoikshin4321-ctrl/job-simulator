@@ -468,3 +468,105 @@ export async function analyzeSimulationFinalWithOpenAI({
   return { raw: content, parsed }
 }
 
+/**
+ * 최종 리포트 역량 프로필을 바탕으로, 국내 채용 시장에서 흔히 보이는 포지션 스타일의 맞춤 직무를 제안한다.
+ * (실시간 공고 스크래핑 없음 — 일반적인 채용 트렌드·직무 명칭 수준의 참고용 추천)
+ * 반환: { jobs: [{ title, orgType, location, employmentType, whyMatch }] }
+ */
+export async function suggestMatchingJobPostingsWithOpenAI({
+  roleId = 'pm',
+  traitsText = '',
+  overallSummary = '',
+  strengthsText = '',
+}) {
+  if (!OPENAI_API_KEY) {
+    return { raw: '', parsed: null }
+  }
+
+  const track =
+    roleId === 'da'
+      ? '데이터 분석·BI·그로스 분석'
+      : roleId === 'marketer'
+        ? '퍼포먼스·브랜드·콘텐츠 마케팅'
+        : '서비스·프로덕트 기획(PM)·프로덕트 오너'
+
+  const systemPrompt =
+    '너는 한국 채용 시장과 직무 구조에 익숙한 커리어 어드바이저다. ' +
+    '반드시 JSON만 출력한다. 특정 구인 사이트 이름이나 URL을 응답에 넣지 마라.'
+
+  const userPrompt = [
+    '다음은 직무 시뮬레이션을 마친 사용자의 역량 프로필 요약이다.',
+    `리허설 직무 축: ${track} (내부 코드: ${roleId})`,
+    '',
+    '[역량 점수]',
+    traitsText || '(점수 정보 없음)',
+    '',
+    overallSummary ? `[종합 요약]\n${overallSummary}` : '',
+    strengthsText ? `[강점 키워드]\n${strengthsText}` : '',
+    '',
+    '요구사항:',
+    '- 실제 채용 공고를 조회한 것처럼 말하지 말 것. "참고용 직무 유형" 제안이다.',
+    '- 국내에서 최근 자주 등장하는 직무명·포지션 스타일을 바탕으로, 이 프로필과 연결될 만한 채용 포지션을 4~5개 제안할 것.',
+    '- 구체적 기업 상호·브랜드명은 쓰지 말고, "중소 IT 스타트업", "에듀테크", "대기업 디지털 계열사" 등 조직 유형만 쓸 것.',
+    '- 각 항목 whyMatch는 사용자 역량 패턴과 어떻게 맞는지 1~2문장으로.',
+    '',
+    '출력 JSON 스키마:',
+    `{
+  "jobs": [
+    {
+      "title": "string",
+      "orgType": "string",
+      "location": "string",
+      "employmentType": "string",
+      "whyMatch": "string"
+    }
+  ]
+}`,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  try {
+    const response = await axios.post(
+      OPENAI_API_URL,
+      {
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.55,
+        response_format: { type: 'json_object' },
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+      },
+    )
+
+    const content = response?.data?.choices?.[0]?.message?.content
+    if (!content) return { raw: '', parsed: null }
+
+    let parsed = null
+    try {
+      parsed = JSON.parse(content)
+    } catch (e) {
+      const match = content.match(/\{[\s\S]*\}/)
+      if (match) {
+        try {
+          parsed = JSON.parse(match[0])
+        } catch {
+          parsed = null
+        }
+      }
+    }
+
+    return { raw: content, parsed }
+  } catch (e) {
+    console.error('suggestMatchingJobPostingsWithOpenAI:', e?.message || e)
+    return { raw: '', parsed: null }
+  }
+}
+

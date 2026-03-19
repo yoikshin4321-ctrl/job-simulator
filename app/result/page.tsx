@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Award, Download, Share2, Info } from 'lucide-react'
+import { Award, Briefcase, Download, Share2, Info } from 'lucide-react'
+import { suggestMatchingJobPostingsWithOpenAI } from '../../src/api/openai'
 
 const STORAGE_KEY = 'job_sim_ai_result'
 const HISTORY_KEY = 'job_sim_ai_history'
@@ -50,11 +51,121 @@ interface HistoryEntry {
   result?: StoredResult['result']
 }
 
+type JobMatch = {
+  title: string
+  orgType?: string
+  location?: string
+  employmentType?: string
+  whyMatch?: string
+}
+
+function getFallbackJobMatches(roleId: 'pm' | 'da' | 'marketer', traits: TraitScore[]): JobMatch[] {
+  const sorted = [...traits].sort((a, b) => b.value - a.value)
+  const top = sorted[0]?.key ?? '문제해결력'
+
+  if (roleId === 'da') {
+    return [
+      {
+        title: '주니어 데이터 애널리스트',
+        orgType: 'IT·커머스 스타트업',
+        location: '서울 (재택 병행 가능)',
+        employmentType: '정규직',
+        whyMatch: `${top} 점수 패턴을 바탕으로, 퍼널·지표 해석이 필요한 애널리스트 포지션과 잘 맞습니다.`,
+      },
+      {
+        title: 'BI/리포팅 담당자',
+        orgType: '중견 서비스 기업',
+        location: '경기·서울',
+        employmentType: '정규직',
+        whyMatch: '데이터 정리와 경영진 리포팅 역량이 강조되는 역할로, 시뮬레이션에서 드러난 분석 습관과 연결됩니다.',
+      },
+      {
+        title: '그로스/실험 분석 코ordinator',
+        orgType: '모바일 앱 스타트업',
+        location: '서울',
+        employmentType: '계약직 → 정규직 전환',
+        whyMatch: '가설·실험 설계 경험이 있다면 A/B 테스트와 지표 모니터링 직무로 이어지기 좋습니다.',
+      },
+      {
+        title: '데이터 기획(현업-DA 협업)',
+        orgType: '에듀테크·핀테크',
+        location: '서울',
+        employmentType: '정규직',
+        whyMatch: 'SQL·지표 정의와 기획 간 번역 역할을 동시에 요구하는 포지션입니다.',
+      },
+    ]
+  }
+  if (roleId === 'marketer') {
+    return [
+      {
+        title: '퍼포먼스 마케터',
+        orgType: 'D2C·이커머스',
+        location: '서울',
+        employmentType: '정규직',
+        whyMatch: `${top} 역량이 높다면 성과 기반 캠페인 운영·최적화 직무와 궁합이 좋습니다.`,
+      },
+      {
+        title: '콘텐츠 마케터',
+        orgType: 'B2B SaaS',
+        location: '서울 (주 2일 재택)',
+        employmentType: '정규직',
+        whyMatch: '메시지 설계와 채널 이해가 필요한 역할로, 시뮬레이션 과제와 방향이 맞습니다.',
+      },
+      {
+        title: '그로스 마케터',
+        orgType: 'IT 스타트업',
+        location: '서울',
+        employmentType: '정규직',
+        whyMatch: '실험·지표 기반 의사결정을 선호한다면 단계별 성장을 담당하는 포지션을 검토해 보세요.',
+      },
+      {
+        title: '브랜드 마케터',
+        orgType: '대기업 계열 디지털 조직',
+        location: '서울',
+        employmentType: '정규직',
+        whyMatch: '스토리텔링과 톤앤매너 정합성이 중요한 브랜드 빌딩 역할과 연결됩니다.',
+      },
+    ]
+  }
+  return [
+    {
+      title: '서비스 기획자 (PM)',
+      orgType: 'IT·플랫폼 스타트업',
+      location: '서울',
+      employmentType: '정규직',
+      whyMatch: `${top} 역량이 두드러질 경우 우선순위·문제 정의 중심의 PM 롤과 잘 맞습니다.`,
+    },
+    {
+      title: '프로덕트 오너(PO)',
+      orgType: '에듀테크·핀테크',
+      location: '서울',
+      employmentType: '정규직',
+      whyMatch: '요구사항 정리와 스프린트 단위 실행이 강점이라면 PO 트랙을 함께 보세요.',
+    },
+    {
+      title: '전략·기획 (신사업/서비스)',
+      orgType: '중견 기업 디지털 TF',
+      location: '수도권',
+      employmentType: '정규직',
+      whyMatch: '비즈니스 맥락과 이해관계자 조율이 강점이면 전략 기획 포지션도 적합합니다.',
+    },
+    {
+      title: 'CX/운영 기획',
+      orgType: '커머스·라이프스타일 앱',
+      location: '서울',
+      employmentType: '계약직',
+      whyMatch: '사용자 경험과 운영 이슈를 동시에 다루는 역할로 진입 장벽이 상대적으로 낮은 편입니다.',
+    },
+  ]
+}
+
 export default function ResultPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showRubric, setShowRubric] = useState(false)
   const [traits, setTraits] = useState<TraitScore[] | null>(null)
   const [roleId, setRoleId] = useState<'pm' | 'da' | 'marketer'>('pm')
+  const [jobMatches, setJobMatches] = useState<JobMatch[] | null>(null)
+  const [jobsLoading, setJobsLoading] = useState(false)
 
   useEffect(() => {
     try {
@@ -129,6 +240,72 @@ export default function ResultPage() {
       setIsLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    if (!traits || !traits.some((t) => typeof t.value === 'number' && t.value > 0)) return
+
+    let cancelled = false
+    ;(async () => {
+      setJobsLoading(true)
+      try {
+        const traitsText = traits.map((t) => `${t.key}: ${t.value}점`).join('\n')
+        let overallSummary = ''
+        let strengthsText = ''
+        if (typeof window !== 'undefined') {
+          const raw = window.localStorage.getItem(STORAGE_KEY)
+          if (raw) {
+            try {
+              const p = JSON.parse(raw)
+              const res = p?.result
+              if (res?.overall_summary && typeof res.overall_summary === 'string') {
+                overallSummary = res.overall_summary
+              }
+              if (Array.isArray(res?.strengths)) {
+                strengthsText = res.strengths.filter((s: unknown) => typeof s === 'string').join('\n- ')
+              }
+            } catch {
+              // ignore
+            }
+          }
+        }
+
+        const { parsed } = await suggestMatchingJobPostingsWithOpenAI({
+          roleId,
+          traitsText,
+          overallSummary,
+          strengthsText: strengthsText ? `- ${strengthsText}` : '',
+        })
+
+        const jobs = parsed?.jobs
+        if (
+          !cancelled &&
+          Array.isArray(jobs) &&
+          jobs.length > 0 &&
+          jobs.every((j: unknown) => j && typeof (j as JobMatch).title === 'string')
+        ) {
+          setJobMatches(
+            jobs.map((j: JobMatch) => ({
+              title: j.title,
+              orgType: j.orgType,
+              location: j.location,
+              employmentType: j.employmentType,
+              whyMatch: j.whyMatch,
+            })),
+          )
+        } else if (!cancelled) {
+          setJobMatches(getFallbackJobMatches(roleId, traits))
+        }
+      } catch {
+        if (!cancelled) setJobMatches(getFallbackJobMatches(roleId, traits))
+      } finally {
+        if (!cancelled) setJobsLoading(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [traits, roleId])
 
   if (isLoading) {
     return (
@@ -351,14 +528,14 @@ export default function ResultPage() {
                     Micro-Credential
                   </p>
                   <h2 className="text-sm sm:text-base font-semibold text-white">
-                    PM 실무 준비도 인증 배지 수여
+                    {interestLabel} 실무 준비도 인증 배지 수여
                   </h2>
                 </div>
               </div>
 
               <p className="relative text-xs sm:text-sm text-white leading-relaxed mb-3">
                 이번 시뮬레이션 결과는 자빅스(JOB-EX)의 마이크로크리덴셜 기준을 충족하여,
-                &quot;PM 실무 준비도&quot; 인증 배지가 부여되었습니다. 해당 배지는 이력서·포트폴리오에
+                &quot;{interestLabel} 실무 준비도&quot; 인증 배지가 부여되었습니다. 해당 배지는 이력서·포트폴리오에
                 첨부해 실무 역량을 증명할 수 있습니다.
               </p>
 
@@ -446,6 +623,56 @@ export default function ResultPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* 맞춤 채용 직무 (시뮬레이션 프로필 기반 참고용) */}
+        <div className="px-6 sm:px-10 pb-10 pt-2">
+          <div className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 sm:p-7">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/50 flex items-center justify-center shrink-0">
+                <Briefcase className="w-5 h-5 text-indigo-300" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white">
+                  당신의 역량에 맞는 현재 채용 중인 직무
+                </h3>
+                <p className="text-[11px] sm:text-xs text-white/65 mt-1 leading-relaxed">
+                  시뮬레이션 답변과 역량 점수·종합 요약을 반영해, 지금 시장에서 자주 열리는 포지션 스타일을
+                  골라 제안했습니다. 실제 채용 시기·조건은 기업마다 다르므로 참고용으로 활용해 주세요.
+                </p>
+              </div>
+            </div>
+
+            {jobsLoading && (
+              <div className="flex items-center gap-3 py-8 justify-center text-sm text-slate-400">
+                <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                맞춤 직무를 준비하는 중입니다…
+              </div>
+            )}
+
+            {!jobsLoading && jobMatches && jobMatches.length > 0 && (
+              <ul className="space-y-3 mt-4">
+                {jobMatches.map((job, idx) => (
+                  <li
+                    key={`${job.title}-${idx}`}
+                    className="rounded-2xl border border-slate-700/90 bg-slate-950/50 px-4 py-4 hover:border-indigo-500/40 transition-colors"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{job.title}</p>
+                        <p className="text-[11px] text-indigo-200/90 mt-1">
+                          {[job.orgType, job.location, job.employmentType].filter(Boolean).join(' · ')}
+                        </p>
+                      </div>
+                    </div>
+                    {job.whyMatch && (
+                      <p className="text-[11px] sm:text-xs text-white/75 mt-2 leading-relaxed">{job.whyMatch}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </div>
