@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { supabase } from '../../src/lib/supabaseClient'
+import { insertInstitution, upsertProfile } from '../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
@@ -47,12 +49,25 @@ export default function InstitutionSignupPage() {
     }
   }, [router])
 
+  // Supabase 세션이 있으면 기관 대시보드로 이동
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!supabase) return
+
+    ;(async () => {
+      const { data } = await supabase.auth.getSession()
+      if (data?.session) router.replace('/institution/dashboard')
+    })().catch(() => {
+      // ignore
+    })
+  }, [router])
+
   const canNext = useMemo(() => {
     if (step !== 1) return true
     return institutionName.trim() && adminName.trim() && adminEmail.trim()
   }, [institutionName, adminName, adminEmail, step])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     if (!institutionName.trim() || !adminName.trim() || !adminEmail.trim() || !password.trim()) {
@@ -66,6 +81,62 @@ export default function InstitutionSignupPage() {
 
     if (typeof window === 'undefined') return
 
+    // 1) Supabase 기반 기관 생성
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email: adminEmail.trim(),
+          password,
+        })
+        if (error) throw error
+        // 이메일 확인(Confirm sign up)이 켜져 있으면 signUp 직후 session이 없을 수 있음.
+        // 이 경우 profiles/institutions upsert가 RLS 때문에 실패할 수 있으므로 세션 체크 후 명확히 안내한다.
+        const { data: sessionData } = await supabase.auth.getSession()
+        const session = sessionData?.session
+
+        const userId = session?.user?.id ?? data.user?.id
+        if (!userId || !session?.user?.id) {
+          setError('현재 Supabase 설정에서 이메일 확인이 필요합니다. “Confirm sign up”을 OFF로 바꾼 뒤 다시 기관 회원가입해 주세요.')
+          return
+        }
+
+        await insertInstitution({
+          adminId: userId,
+          institutionCode,
+          institutionName: institutionName.trim(),
+          contactEmail: contactEmail.trim() || 'job-ex@gmail.com',
+        })
+
+        await upsertProfile({
+          userId,
+          role: 'institution_admin',
+          name: adminName.trim(),
+          school: '',
+          major: '',
+          status: '',
+          interests: [],
+          institution_code: institutionCode,
+        })
+
+        const next = {
+          users: [],
+          institutions: [],
+          currentInstitution: {
+            adminEmail: adminEmail.trim(),
+            institutionName: institutionName.trim(),
+            institutionCode,
+          },
+          currentUser: null,
+        } as any
+        window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+        router.replace('/institution/dashboard')
+        return
+      } catch {
+        // Supabase 실패 시 localStorage fallback으로 “데이터 유실 없이” 이어감
+      }
+    }
+
+    // 2) Supabase 미설정/실패 시 기존 localStorage 기관 생성
     let store: {
       users: any[]
       institutions: any[]

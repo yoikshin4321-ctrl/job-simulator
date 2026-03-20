@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Award, BarChart3, Briefcase, Users } from 'lucide-react'
+import { supabase } from '../../../src/lib/supabaseClient'
+import { fetchStepResultsForInstitution, getInstitutionByAdmin, getSupabaseUserId } from '../../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 const HISTORY_KEY = 'job_sim_ai_history'
@@ -50,6 +52,29 @@ export default function InstitutionDashboardPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+
+    // 1) Supabase 우선 로딩 (멀티디바이스 대응)
+    if (supabase) {
+      ;(async () => {
+        const userId = await getSupabaseUserId()
+        if (!userId) return
+
+        const inst = await getInstitutionByAdmin(userId)
+        if (!inst?.institution_code) return
+
+        setInstitution({
+          institutionName: inst.institution_name,
+          institutionCode: inst.institution_code,
+          adminEmail: '', // UI 상단에선 없어도 동작
+        })
+
+        const rows = await fetchStepResultsForInstitution({ institutionCode: inst.institution_code })
+        setHistories(rows as any)
+      })().catch(() => {
+        // ignore: fallback은 아래 localStorage 코드로 처리
+      })
+    }
+
     const raw = window.localStorage.getItem(AUTH_KEY)
     const parsed = safeParseJson(raw)
     const currentInstitution = parsed?.currentInstitution

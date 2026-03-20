@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Award, Briefcase, Download, Share2, Info } from 'lucide-react'
 import { suggestMatchingJobPostingsWithOpenAI } from '../../src/api/openai'
+import { supabase } from '../../src/lib/supabaseClient'
+import { fetchLatestFinalResultForUser, fetchStepResultsForUser, getSupabaseUserId } from '../../src/lib/supabaseDb'
 
 const STORAGE_KEY = 'job_sim_ai_result'
 const HISTORY_KEY = 'job_sim_ai_history'
@@ -168,77 +170,119 @@ export default function ResultPage() {
   const [jobsLoading, setJobsLoading] = useState(false)
 
   useEffect(() => {
-    try {
-      if (typeof window === 'undefined') {
-        setIsLoading(false)
-        return
-      }
+    ;(async () => {
+      try {
+        if (typeof window === 'undefined') {
+          setIsLoading(false)
+          return
+        }
 
-      const raw = window.localStorage.getItem(STORAGE_KEY)
-      const historyRaw = window.localStorage.getItem(HISTORY_KEY)
+        // 1) Supabase 우선 로딩
+        if (supabase) {
+          const userId = await getSupabaseUserId()
+          if (userId) {
+            const finalRow = await fetchLatestFinalResultForUser({ userId })
+            const stepRows = await fetchStepResultsForUser({ userId })
 
-      if (!raw && !historyRaw) {
-        setIsLoading(false)
-        return
-      }
+            if (finalRow || stepRows.length) {
+              let role: 'pm' | 'da' | 'marketer' = 'pm'
+              const finalRole = finalRow?.roleId
+              if (finalRole === 'pm' || finalRole === 'da' || finalRole === 'marketer') role = finalRole
+              if (!stepRows.length && finalRow?.roleId) role = role
 
-      let role: 'pm' | 'da' | 'marketer' = 'pm'
-      let latestResult: StoredResult['result'] = {}
+              const aggregate: Record<TraitKey, { sum: number; n: number }> = {} as any
+              stepRows.forEach((entry) => {
+                const r = entry.result || {}
+                TRAIT_KEYS.forEach((k) => {
+                  const info = (r as any)[k]
+                  const score = info?.score ?? info?.점수
+                  if (typeof score === 'number') {
+                    if (!aggregate[k]) aggregate[k] = { sum: 0, n: 0 }
+                    aggregate[k].sum += score
+                    aggregate[k].n += 1
+                  }
+                })
+              })
 
-      if (raw) {
-        try {
-          const parsed: StoredResult = JSON.parse(raw)
-          latestResult = parsed?.result || {}
-          const r = parsed?.roleId
-          if (r === 'pm' || r === 'da' || r === 'marketer') {
-            role = r
+              const mapped: TraitScore[] = TRAIT_KEYS.map((key) => {
+                const agg = aggregate[key]
+                if (agg && agg.n > 0) return { key, value: Math.round(agg.sum / agg.n) }
+
+                const info = (finalRow?.finalJson as any)?.[key]
+                const score = info?.score ?? info?.점수 ?? 0
+                return { key, value: score }
+              })
+
+              setTraits(mapped)
+              setRoleId(role)
+              return
+            }
           }
-        } catch {
-          // ignore
         }
-      }
 
-      // history에 여러 단계의 점수가 쌓여 있다면, 평균값을 구해 사용
-      const aggregate: Record<TraitKey, { sum: number; n: number }> = {} as any
+        // 2) localStorage fallback
+        const raw = window.localStorage.getItem(STORAGE_KEY)
+        const historyRaw = window.localStorage.getItem(HISTORY_KEY)
+        if (!raw && !historyRaw) {
+          setIsLoading(false)
+          return
+        }
 
-      if (historyRaw) {
-        try {
-          const history: HistoryEntry[] = JSON.parse(historyRaw) || []
-          history.forEach((entry) => {
-            const r = entry.result || {}
-            TRAIT_KEYS.forEach((k) => {
-              const info = (r as any)[k]
-              const score = info?.score ?? info?.점수
-              if (typeof score === 'number') {
-                if (!aggregate[k]) aggregate[k] = { sum: 0, n: 0 }
-                aggregate[k].sum += score
-                aggregate[k].n += 1
-              }
+        let role: 'pm' | 'da' | 'marketer' = 'pm'
+        let latestResult: StoredResult['result'] = {}
+
+        if (raw) {
+          try {
+            const parsed: StoredResult = JSON.parse(raw)
+            latestResult = parsed?.result || {}
+            const r = parsed?.roleId
+            if (r === 'pm' || r === 'da' || r === 'marketer') {
+              role = r
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        const aggregate: Record<TraitKey, { sum: number; n: number }> = {} as any
+        if (historyRaw) {
+          try {
+            const history: HistoryEntry[] = JSON.parse(historyRaw) || []
+            history.forEach((entry) => {
+              const r = entry.result || {}
+              TRAIT_KEYS.forEach((k) => {
+                const info = (r as any)[k]
+                const score = info?.score ?? info?.점수
+                if (typeof score === 'number') {
+                  if (!aggregate[k]) aggregate[k] = { sum: 0, n: 0 }
+                  aggregate[k].sum += score
+                  aggregate[k].n += 1
+                }
+              })
             })
-          })
-        } catch {
-          // ignore
+          } catch {
+            // ignore
+          }
         }
+
+        const mapped: TraitScore[] = TRAIT_KEYS.map((key) => {
+          const agg = aggregate[key]
+          if (agg && agg.n > 0) {
+            return { key, value: Math.round(agg.sum / agg.n) }
+          }
+          const info = (latestResult as any)?.[key]
+          const score = info?.score ?? info?.점수 ?? 0
+          return { key, value: score }
+        })
+
+        setTraits(mapped)
+        setRoleId(role)
+      } catch {
+        setTraits(null)
+      } finally {
+        setIsLoading(false)
       }
-
-      // history가 있으면 평균값 사용, 없으면 최신 결과 사용
-      const mapped: TraitScore[] = TRAIT_KEYS.map((key) => {
-        const agg = aggregate[key]
-        if (agg && agg.n > 0) {
-          return { key, value: Math.round(agg.sum / agg.n) }
-        }
-        const info = (latestResult as any)?.[key]
-        const score = info?.score ?? info?.점수 ?? 0
-        return { key, value: score }
-      })
-
-      setTraits(mapped)
-      setRoleId(role)
-    } catch {
-      setTraits(null)
-    } finally {
-      setIsLoading(false)
-    }
+    })()
   }, [])
 
   useEffect(() => {
@@ -251,7 +295,19 @@ export default function ResultPage() {
         const traitsText = traits.map((t) => `${t.key}: ${t.value}점`).join('\n')
         let overallSummary = ''
         let strengthsText = ''
-        if (typeof window !== 'undefined') {
+        if (supabase) {
+          const userId = await getSupabaseUserId()
+          if (userId) {
+            const finalRow = await fetchLatestFinalResultForUser({ userId })
+            const res = finalRow?.finalJson
+            if (res?.overall_summary && typeof res.overall_summary === 'string') {
+              overallSummary = res.overall_summary
+            }
+            if (Array.isArray(res?.strengths)) {
+              strengthsText = res.strengths.filter((s: unknown) => typeof s === 'string').join('\n- ')
+            }
+          }
+        } else if (typeof window !== 'undefined') {
           const raw = window.localStorage.getItem(STORAGE_KEY)
           if (raw) {
             try {

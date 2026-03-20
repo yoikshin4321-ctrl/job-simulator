@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
+import { supabase } from '../src/lib/supabaseClient'
+import { getInstitutionByAdmin, getProfileByUserId } from '../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
@@ -46,6 +48,45 @@ export default function NavBar() {
       try {
         const raw = typeof window !== 'undefined' ? window.localStorage.getItem(AUTH_KEY) : null
         if (!raw) {
+          // localStorage에 인증 정보가 없으면 Supabase 세션을 확인해서 멀티디바이스 대응
+          if (supabase) {
+            void (async () => {
+              try {
+                const { data } = await supabase.auth.getSession()
+                const session = data?.session
+                if (!session) {
+                  setCurrentUser(null)
+                  setCurrentInstitution(null)
+                  return
+                }
+
+                const prof = await getProfileByUserId(session.user.id)
+                if (!prof) {
+                  setCurrentUser(null)
+                  setCurrentInstitution(null)
+                  return
+                }
+
+                if (prof.role === 'institution_admin') {
+                  const inst = await getInstitutionByAdmin(session.user.id)
+                  setCurrentInstitution(
+                    inst
+                      ? { institutionName: inst.institution_name, institutionCode: inst.institution_code }
+                      : { institutionName: '기관', institutionCode: '' },
+                  )
+                  setCurrentUser(null)
+                } else {
+                  setCurrentInstitution(null)
+                  setCurrentUser({ email: session.user.email, name: prof.name })
+                }
+              } catch {
+                setCurrentUser(null)
+                setCurrentInstitution(null)
+              }
+            })()
+            return
+          }
+
           setCurrentUser(null)
           setCurrentInstitution(null)
           return
@@ -80,6 +121,11 @@ export default function NavBar() {
       }
     } catch {
       // ignore
+    }
+    if (supabase) {
+      void supabase.auth.signOut().catch(() => {
+        // ignore
+      })
     }
     setCurrentUser(null)
     setCurrentInstitution(null)

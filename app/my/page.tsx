@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { supabase } from '../../src/lib/supabaseClient'
+import { fetchStepResultsForUser, getProfileByUserId, getSupabaseUserId, updateStudentInterests } from '../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 const HISTORY_KEY = 'job_sim_ai_history'
@@ -49,9 +51,40 @@ export default function MyPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    // 1) Supabase 우선 로딩 (멀티디바이스 대응)
+    if (supabase) {
+      ;(async () => {
+        const userId = await getSupabaseUserId()
+        if (!userId) return
+        const { data } = await supabase.auth.getSession()
+        const email = data?.session?.user?.email || ''
+        const prof = await getProfileByUserId(userId)
+        if (!prof) return
+
+        setUser({
+          id: prof.id,
+          email,
+          name: prof.name,
+          school: prof.school,
+          major: prof.major,
+          status: prof.status,
+          interests: prof.interests,
+          institutionCode: prof.institution_code,
+        })
+        setInterests((prof.interests || []) as InterestOption[])
+
+        const rows = await fetchStepResultsForUser({ userId })
+        setHistories(rows as any)
+        setGuest(false)
+      })().catch(() => {
+        // ignore -> localStorage fallback
+      })
+      // Supabase가 켜져 있더라도, 실패 시 아래 localStorage fallback으로 동작
+    }
+
     const raw = window.localStorage.getItem(AUTH_KEY)
     if (!raw) {
-      setGuest(true)
+      if (!supabase) setGuest(true)
       return
     }
 
@@ -60,7 +93,7 @@ export default function MyPage() {
       const currentUser = parsed?.currentUser
       const users = parsed?.users || []
       if (!currentUser?.email) {
-        setGuest(true)
+        if (!supabase) setGuest(true)
         return
       }
 
@@ -102,22 +135,38 @@ export default function MyPage() {
     }
 
     setError('')
-    const raw = window.localStorage.getItem(AUTH_KEY)
-    if (!raw) return
-    try {
-      const parsed = JSON.parse(raw)
-      const users = parsed?.users || []
-      const nextUsers = users.map((u: any) => {
-        if (u.email !== user.email) return u
-        return { ...u, interests }
-      })
 
-      const next = { ...parsed, users, currentUser: parsed.currentUser }
-      window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
-      setSaveStatus('saved')
-    } catch {
-      setError('저장에 실패했습니다.')
+    // Supabase 저장 (안전장치: 실패해도 localStorage 저장은 그대로 수행)
+    const saveToSupabase = async () => {
+      if (!supabase) return
+      try {
+        const userId = await getSupabaseUserId()
+        if (!userId) return
+        await updateStudentInterests({ userId, interests })
+      } catch {
+        // ignore
+      }
     }
+
+    void saveToSupabase().finally(() => {
+      // 기존 localStorage 저장 (기존 UI 호환)
+      const raw = window.localStorage.getItem(AUTH_KEY)
+      if (!raw) return
+      try {
+        const parsed = JSON.parse(raw)
+        const users = parsed?.users || []
+        const nextUsers = users.map((u: any) => {
+          if (u.email !== user.email) return u
+          return { ...u, interests }
+        })
+
+        const next = { ...parsed, users, currentUser: parsed.currentUser }
+        window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+        setSaveStatus('saved')
+      } catch {
+        setError('저장에 실패했습니다.')
+      }
+    })
   }
 
   if (guest) {

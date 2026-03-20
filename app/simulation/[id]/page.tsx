@@ -8,6 +8,13 @@ import {
   analyzeSimulationStepWithOpenAI,
   analyzeSimulationFinalWithOpenAI,
 } from '../../../src/api/openai'
+import { supabase } from '../../../src/lib/supabaseClient'
+import {
+  getProfileByUserId,
+  getSupabaseUserId,
+  insertOrUpsertFinalResult,
+  insertOrUpsertStepResult,
+} from '../../../src/lib/supabaseDb'
 
 const QUESTION_VARIANTS_PER_LEVEL = 15
 
@@ -185,6 +192,25 @@ export default function SimulationDetailPage({
   useEffect(() => {
     // 로그인한 학생 정보를 로컬스토리지에서 읽어서, 기관 대시보드 집계를 위한 메타데이터를 붙임
     try {
+      if (supabase) {
+        ;(async () => {
+          const userId = await getSupabaseUserId()
+          if (!userId) return
+          const { data } = await supabase.auth.getSession()
+          const email = data?.session?.user?.email || ''
+          const prof = await getProfileByUserId(userId)
+          if (!prof) return
+          setStudentMeta({
+            email,
+            name: prof.name || '',
+            institutionCode: prof.institution_code || '',
+          })
+        })().catch(() => {
+          // ignore
+        })
+        return
+      }
+
       const raw = window.localStorage.getItem(AUTH_KEY)
       if (!raw) return
       const parsed = JSON.parse(raw)
@@ -283,6 +309,31 @@ export default function SimulationDetailPage({
             isResubmission,
           })
           window.localStorage.setItem(historyKey, JSON.stringify(parsedHistory))
+
+          // Supabase 동기 저장 (Dual-write): localStorage가 실패하지 않도록 실패는 무시
+          if (supabase) {
+            try {
+              const userId = await getSupabaseUserId()
+              if (userId) {
+                await insertOrUpsertStepResult({
+                  userId,
+                  institutionCode,
+                  runId: runIdRef.current,
+                  roleId: roleKey,
+                  levelIndex: flowStep,
+                  levelLabel: currentTask.taskTitle,
+                  resultJson: Object.keys(traitBlock).length ? traitBlock : parsed,
+                  answerText: answer,
+                  analyzedAt: new Date().toISOString(),
+                  isResubmission,
+                  studentEmail: studentMeta?.email || '',
+                  studentName: studentMeta?.name || '',
+                })
+              }
+            } catch {
+              // ignore (안전장치)
+            }
+          }
         } catch {
           // ignore
         }
@@ -342,6 +393,27 @@ export default function SimulationDetailPage({
             runId,
           }),
         )
+
+        // Supabase 최종 결과 upsert
+        if (supabase) {
+          try {
+            const userId = await getSupabaseUserId()
+            if (userId) {
+              await insertOrUpsertFinalResult({
+                userId,
+                institutionCode,
+                runId,
+                roleId: roleKey,
+                finalJson: parsed,
+                analyzedAt: new Date().toISOString(),
+                studentEmail,
+                studentName,
+              })
+            }
+          } catch {
+            // ignore
+          }
+        }
       }
       router.replace('/result')
     } catch (e: any) {

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { supabase, supabaseConfigured } from '../../src/lib/supabaseClient'
+import { upsertProfile } from '../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
@@ -43,6 +45,20 @@ export default function SignupPage() {
     }
   }, [router])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!supabase) return
+
+    ;(async () => {
+      const { data } = await supabase.auth.getSession()
+      if (data?.session) {
+        router.replace('/')
+      }
+    })().catch(() => {
+      // ignore
+    })
+  }, [router])
+
   const toggleInterest = (label: string) => {
     setInterests((prev) =>
       prev.includes(label) ? prev.filter((v) => v !== label) : [...prev, label],
@@ -76,12 +92,93 @@ export default function SignupPage() {
     setStep((prev) => Math.max(prev - 1, 1))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
     if (typeof window === 'undefined') return
 
+    // Vercel에서 환경변수가 주입되지 않으면 supabase는 null이 되고, DB 저장은 localStorage fallback만 동작합니다.
+    // (사용자 입장에서 "profiles가 안 쌓임"이 발생하므로 즉시 안내)
+    const host = window.location.hostname || ''
+    const likelyVercel = host.includes('vercel.app')
+    if (likelyVercel && !supabaseConfigured) {
+      setError('이 배포(Vercel)에서는 Supabase 환경변수가 주입되지 않아 DB 저장이 동작하지 않습니다. Vercel Environment Variables의 NEXT_PUBLIC_SUPABASE_URL/ANON_KEY를 확인해 주세요.')
+      // localStorage 회원가입은 유지해서 서비스 흐름은 이어가게 함
+      return
+    }
+
+    const newUser = {
+      name: name.trim(),
+      email: email.trim(),
+      password,
+      school: school.trim(),
+      major: major.trim(),
+      status,
+      interests,
+      institutionCode: institutionCode.trim() || '',
+      createdAt: new Date().toISOString(),
+    }
+
+    // 1) Supabase 기반 회원가입 (가능할 때만)
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email: newUser.email,
+          password: newUser.password,
+        })
+        if (error) throw error
+        // 이메일 확인(Confirm sign up)이 켜져 있으면 signUp 직후 session이 없을 수 있음.
+        // 이 경우 RLS 때문에 profiles upsert가 실패하므로, 먼저 세션 유무를 체크하고 명확히 안내한다.
+        const { data: sessionData } = await supabase.auth.getSession()
+        const session = sessionData?.session
+
+        const userId = session?.user?.id ?? data.user?.id
+        if (!userId || !session?.user?.id) {
+          setError('현재 Supabase 설정에서 이메일 확인이 필요합니다. Supabase에서 “Confirm sign up”을 OFF로 바꾼 뒤 다시 회원가입해 주세요.')
+          return
+        }
+
+        await upsertProfile({
+          userId,
+          role: 'student',
+          name: newUser.name,
+          school: newUser.school,
+          major: newUser.major,
+          status: newUser.status,
+          interests: newUser.interests,
+          institution_code: newUser.institutionCode,
+        })
+
+        // 안전장치: 기존 localStorage shape도 유지해서 화면이 바로 깨지지 않게 함
+        const next = {
+          users: [
+            {
+              name: newUser.name,
+              email: newUser.email,
+              school: newUser.school,
+              major: newUser.major,
+              status: newUser.status,
+              interests: newUser.interests,
+              institutionCode: newUser.institutionCode,
+              createdAt: newUser.createdAt,
+            },
+          ],
+          institutions: [],
+          currentUser: { email: newUser.email, name: newUser.name },
+          currentInstitution: null,
+        } as any
+
+        window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+        router.replace('/')
+        return
+      } catch (e: any) {
+        // Supabase 실패 시 기존 로컬 회원가입으로 fallback
+        // (기존 데이터가 유지되므로 “데이터 유실” 방지)
+      }
+    }
+
+    // 2) Supabase 미설정/실패 시 기존 localStorage 회원가입
     let store: { users: any[]; institutions?: any[]; currentUser: any | null; currentInstitution?: any | null } = {
       users: [],
       institutions: [],
@@ -101,18 +198,6 @@ export default function SignupPage() {
     if (exists) {
       setError('이미 가입된 이메일입니다. 로그인 페이지로 이동해 주세요.')
       return
-    }
-
-    const newUser = {
-      name: name.trim(),
-      email: email.trim(),
-      password,
-      school: school.trim(),
-      major: major.trim(),
-      status,
-      interests,
-      institutionCode: institutionCode.trim() || '',
-      createdAt: new Date().toISOString(),
     }
 
     const next = {

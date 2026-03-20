@@ -15,6 +15,18 @@ const OPENAI_API_KEY =
   ''
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions'
 
+function clamp(n, min, max) {
+  return Math.min(max, Math.max(min, n))
+}
+
+function pickMockScore({ answerText = '', stepNumber = 1 }) {
+  // "키 없음"에서도 UI 흐름이 멈추지 않게 하기 위한 결정적(deterministic) 가짜 점수 생성
+  const len = (answerText || '').trim().length
+  const base = clamp(Math.round((len / 220) * 70 + 20), 5, 95)
+  const stepBump = stepNumber === 1 ? -5 : stepNumber === 2 ? 0 : 5
+  return clamp(base + stepBump, 1, 100)
+}
+
 /**
  * 사용자의 주관식 답변을 OpenAI gpt-4o-mini로 분석합니다.
  * - raw: 모델이 그대로 반환한 텍스트 (화면 표시용)
@@ -175,10 +187,39 @@ function getLevelDifficultyCriteria(levelIndex) {
  */
 export async function generateRandomSimulationTask({ roleId = 'pm', levelIndex = 1, variantIndex = 1 }) {
   if (!OPENAI_API_KEY) {
-    if (typeof window !== 'undefined') {
-      alert('OpenAI API 키가 설정되어 있지 않습니다. .env의 VITE_OPENAI_API_KEY 값을 확인해 주세요.')
+    // 키가 없을 때도 시뮬레이션 화면/흐름은 동작시키기 위한 모의 응답
+    const roleLabel = buildRoleKoreanLabel(roleId)
+    const levelLabel =
+      levelIndex === 1 ? 'Level 1 기본' : levelIndex === 2 ? 'Level 2 중급' : 'Level 3 고급'
+
+    const parsed = {
+      domain:
+        roleId === 'da' ? 'Data & Analytics' : roleId === 'marketer' ? 'Marketing' : 'Edutech',
+      taskTitle: `${roleLabel} ${levelLabel} - Variant ${variantIndex}`,
+      situation:
+        levelIndex === 1
+          ? `당신은 소규모 팀에서 사용자의 요청을 처리하는 역할을 맡았습니다. 현재 목표는 단기간에 “사용자 불만”을 줄이는 것입니다. 어떤 기준으로 문제를 정의하고, 바로 실행할 다음 행동을 정리해 주세요.`
+          : levelIndex === 2
+            ? `당신은 제한된 일정과 리소스를 가진 환경에서 여러 이해관계자(사용자/운영/개발) 사이의 우선순위를 조정해야 합니다. 트레이드오프가 드러나는 선택을 근거와 함께 설명하고, 실행 가능한 실행안까지 제시해 주세요.`
+            : `당신은 성과를 KPI로 검증해야 하는 상황에서 가설-실행-측정을 한 번에 설계해야 합니다. 성공/실패 기준과 리스크를 포함해 데이터 기반으로 결론에 도달하는 프로세스를 제시해 주세요.`,
+      requirements:
+        levelIndex === 1
+          ? ['상황을 한 문단 요약', '핵심 문제(원인/영향)를 명확히 정의', '바로 실행 가능한 다음 액션 1~2가지 제시']
+          : levelIndex === 2
+            ? [
+                '우선순위/트레이드오프를 명시',
+                '선택의 근거를 사용자/운영 관점으로 설명',
+                '이해관계자별 기대치 조율 포인트 포함',
+              ]
+            : ['KPI/지표와 성공/실패 기준 포함', '가설과 측정 설계(간단한 실험/분석) 제시', '리스크와 다음 액션(학습/개선)까지 연결'],
+      constraints:
+        levelIndex === 3
+          ? ['단기 실행과 중기 학습을 동시에 고려', '정량 지표(예: 전환율/이탈률 등) 관점이 드러나야 함']
+          : ['단기간 실행 가능한 액션 위주로 작성할 것.', '답변은 5~10문장 내외로 정리할 것.'],
+      variantIndex,
     }
-    throw new Error('OPENAI API 키가 설정되어 있지 않습니다. .env에 VITE_OPENAI_API_KEY를 확인하세요.')
+
+    return { raw: JSON.stringify(parsed), parsed }
   }
 
   const roleLabel = buildRoleKoreanLabel(roleId)
@@ -281,10 +322,40 @@ export async function analyzeSimulationStepWithOpenAI({
   console.log('VITE_OPENAI_API_KEY loaded?', !!OPENAI_API_KEY)
 
   if (!OPENAI_API_KEY) {
-    if (typeof window !== 'undefined') {
-      alert('OpenAI API 키가 설정되어 있지 않습니다. .env의 VITE_OPENAI_API_KEY 값을 확인해 주세요.')
+    const score = pickMockScore({ answerText, stepNumber })
+    const score2 = clamp(score - 8, 1, 100)
+    const score3 = clamp(score + 6, 1, 100)
+
+    const traitBlock = {
+      문제해결력: { score, reason: '핵심 상황/문제를 구분해 다음 행동으로 연결한 점이 강점입니다.' },
+      커뮤니케이션: {
+        score: score2,
+        reason: '구조는 명확하지만, 이해관계자별 기대치/메시지의 구체성이 추가되면 더 좋아질 것 같아요.',
+      },
+      직무이해력: { score: clamp(score3, 1, 100), reason: '직무 관점에서 논리가 비교적 일관되게 전개되어 있습니다.' },
+      완수율: { score: clamp(score - 4, 1, 100), reason: '실행 가능성은 보이지만, 성공 기준/검증 방법이 보강되면 완성도가 올라갑니다.' },
+      전문지식: { score: clamp(score2 - 3, 1, 100), reason: '관련 개념/전제의 근거를 1~2개 더 붙이면 전문성이 더 드러날 수 있습니다.' },
     }
-    throw new Error('OPENAI API 키가 설정되어 있지 않습니다. .env에 VITE_OPENAI_API_KEY를 확인하세요.')
+
+    const improvements =
+      stepNumber === 1
+        ? ['다음 액션의 이유(왜 지금/왜 이 방식인지)를 한 문장 추가', '요청/지표 관점이 드러나도록 성공 기준을 간단히 명시']
+        : stepNumber === 2
+          ? ['트레이드오프에서 “선택하지 않은 대안”과 그 이유를 1개 이상 추가', '이해관계자별 메시지(예: 사용자/운영/개발)를 분리해서 제시']
+          : ['KPI/지표를 1~2개로 명확히 정의하고 기대 방향을 포함', '리스크(가정이 틀릴 때의 대안)와 다음 학습 액션까지 연결'];
+
+    const best_answer = taskTitle
+      ? `(${taskTitle}) 문제를 먼저 명확히 정의하고, 트레이드오프/성공 기준을 포함해 실행 가능한 다음 액션으로 연결하겠습니다.`
+      : '문제 정의-근거-다음 액션이 연결되도록 답안을 재구성하면 더 높은 점수를 받을 수 있습니다.';
+
+    const step_summary = isResubmission
+      ? '재제출은 개선 방향이 들어가 있지만, 핵심 근거/검증 기준을 더 구체화하면 완성도가 높아집니다.'
+      : '핵심 문제 정의와 실행 연결은 좋습니다. 다음 제출에서는 근거/성공 기준을 더 명확히 하면 점수가 상승할 가능성이 큽니다.';
+
+    return {
+      raw: JSON.stringify({ ...traitBlock, improvements, best_answer, step_summary }),
+      parsed: { ...traitBlock, improvements, best_answer, step_summary },
+    }
   }
 
   const focus = buildRoleFocus(roleId)
@@ -383,10 +454,38 @@ export async function analyzeSimulationFinalWithOpenAI({
   console.log('VITE_OPENAI_API_KEY loaded?', !!OPENAI_API_KEY)
 
   if (!OPENAI_API_KEY) {
-    if (typeof window !== 'undefined') {
-      alert('OpenAI API 키가 설정되어 있지 않습니다. .env의 VITE_OPENAI_API_KEY 값을 확인해 주세요.')
+    const allText = (steps || [])
+      .map((s) => s?.answerText || '')
+      .join('\n')
+      .trim()
+    const base = pickMockScore({ answerText: allText, stepNumber: 3 })
+    const t1 = base
+    const t2 = clamp(base - 7, 1, 100)
+    const t3 = clamp(base + 5, 1, 100)
+
+    const strengths = [
+      '문제 정의와 실행 연결(다음 액션으로의 전환)',
+      '답변 구조의 일관성(근거-행동 흐름)',
+      '직무 관점에서의 핵심 포인트 도출',
+    ]
+    const next_steps = [
+      'KPI/성공 기준을 더 구체화하고, 검증 절차를 짧게라도 추가',
+      '이해관계자 메시지(누가/무엇을/왜)를 분리해서 표현',
+      '재제출 시 “개선한 이유”와 “개선으로 달라진 결과 기대”를 명시',
+    ]
+
+    const parsed = {
+      문제해결력: { score: t1, reason: '문제-행동 연결이 비교적 명확합니다.' },
+      커뮤니케이션: { score: t2, reason: '구조는 좋지만 이해관계자 기대치의 구체성이 추가되면 더 강해집니다.' },
+      직무이해력: { score: t3, reason: '직무 관점 요소가 답변에 잘 반영되어 있습니다.' },
+      완수율: { score: clamp(t1 - 5, 1, 100), reason: '실행 가능성은 보이며 검증 기준이 더해지면 완성도가 올라갑니다.' },
+      전문지식: { score: clamp(t2 - 3, 1, 100), reason: '전제/개념 근거를 1~2개만 더 넣으면 설득력이 높아집니다.' },
+      overall_summary: '전체적으로 답변의 구조와 실행 연결이 강점이며, 다음 단계에서는 성공 기준/검증 절차를 더 명확히 하면 준비도 상승 폭이 커질 수 있습니다.',
+      strengths,
+      next_steps,
     }
-    throw new Error('OPENAI API 키가 설정되어 있지 않습니다. .env에 VITE_OPENAI_API_KEY를 확인하세요.')
+
+    return { raw: JSON.stringify(parsed), parsed }
   }
 
   const focus = buildRoleFocus(roleId)

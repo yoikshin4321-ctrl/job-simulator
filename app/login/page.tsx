@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { supabase } from '../../src/lib/supabaseClient'
+import { getProfileByUserId } from '../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
@@ -26,12 +28,90 @@ export default function LoginPage() {
     }
   }, [router])
 
+  // Supabase 세션이 있으면 로그인 상태로 간주 (localStorage와 별개: 멀티디바이스 대응)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!supabase) return
+
+    ;(async () => {
+      const { data } = await supabase.auth.getSession()
+      const session = data?.session
+      if (!session) return
+
+      const prof = await getProfileByUserId(session.user.id)
+      if (!prof) return
+
+      router.replace(prof.role === 'institution_admin' ? '/institution/dashboard' : '/')
+    })().catch(() => {
+      // ignore
+    })
+  }, [router])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
     if (typeof window === 'undefined') return
 
+    // 1) Supabase 기반 로그인 시도 (가능하면)
+    if (supabase) {
+      supabase
+        .auth
+        .signInWithPassword({ email: email.trim(), password })
+        .then(async ({ data, error }) => {
+          if (error) throw error
+          const userId = data.user?.id
+          if (!userId) throw new Error('Supabase user not found')
+
+          const prof = await getProfileByUserId(userId)
+          if (!prof) throw new Error('프로필 정보를 불러오지 못했습니다.')
+
+          // 기존 UI 호환을 위해 localStorage에도 동일 shape로 저장 (안전: 삭제하지 않음)
+          const next = {
+            users: [],
+            institutions: [],
+            currentUser: prof.role === 'student' ? { email: email.trim(), name: prof.name } : null,
+            currentInstitution:
+              prof.role === 'institution_admin'
+                ? { adminEmail: email.trim(), institutionName: '기관', institutionCode: '' }
+                : null,
+          } as any
+
+          window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+
+          router.replace(prof.role === 'institution_admin' ? '/institution/dashboard' : '/')
+        })
+        .catch(() => {
+          // 2) Supabase 실패 시 기존 localStorage 로그인으로 fallback
+          const raw = window.localStorage.getItem(AUTH_KEY)
+          if (!raw) {
+            setError('가입된 계정을 먼저 생성해 주세요.')
+            return
+          }
+
+          try {
+            const parsed = JSON.parse(raw)
+            const users = parsed?.users || []
+            const found = users.find((u: any) => u.email === email.trim())
+            if (!found || found.password !== password) {
+              setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+              return
+            }
+
+            const next = {
+              ...parsed,
+              currentUser: { email: found.email, name: found.name },
+            }
+            window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+            router.replace('/')
+          } catch {
+            setError('로그인 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
+          }
+        })
+      return
+    }
+
+    // Supabase 미설정인 경우: 기존 localStorage 로그인만 사용
     const raw = window.localStorage.getItem(AUTH_KEY)
     if (!raw) {
       setError('가입된 계정을 먼저 생성해 주세요.')

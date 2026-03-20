@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { supabase } from '../../src/lib/supabaseClient'
+import { getInstitutionByAdmin, getProfileByUserId } from '../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
@@ -24,11 +26,94 @@ export default function InstitutionLoginPage() {
     }
   }, [router])
 
+  // Supabase 세션이 있으면 기관 대시보드로 이동 (멀티디바이스 대응)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!supabase) return
+
+    ;(async () => {
+      const { data } = await supabase.auth.getSession()
+      const session = data?.session
+      if (!session) return
+
+      const prof = await getProfileByUserId(session.user.id)
+      if (!prof || prof.role !== 'institution_admin') return
+
+      router.replace('/institution/dashboard')
+    })().catch(() => {
+      // ignore
+    })
+  }, [router])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     if (typeof window === 'undefined') return
 
+    const email = adminEmail.trim()
+
+    // 1) Supabase 기반 로그인
+    if (supabase) {
+      supabase
+        .auth
+        .signInWithPassword({ email, password })
+        .then(async ({ data, error }) => {
+          if (error) throw error
+
+          const userId = data.user?.id
+          if (!userId) throw new Error('Supabase user not found')
+
+          const inst = await getInstitutionByAdmin(userId)
+          const prof = await getProfileByUserId(userId)
+          if (!inst || !prof) throw new Error('기관 프로필/기관 정보를 불러오지 못했습니다.')
+
+          const next = {
+            users: [],
+            institutions: [],
+            currentInstitution: {
+              adminEmail: email,
+              institutionName: inst.institution_name,
+              institutionCode: inst.institution_code,
+            },
+            currentUser: null,
+          }
+
+          window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+          router.replace('/institution/dashboard')
+        })
+        .catch(() => {
+          // 2) Supabase 실패 시 localStorage fallback (데이터 유실 방지)
+          const raw = window.localStorage.getItem(AUTH_KEY)
+          if (!raw) {
+            setError('기관 계정을 먼저 생성해 주세요.')
+            return
+          }
+          try {
+            const parsed = JSON.parse(raw)
+            const institutions = parsed?.institutions || []
+            const found = institutions.find((ins: any) => ins.adminEmail === email)
+            if (!found || found.password !== password) {
+              setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+              return
+            }
+
+            parsed.currentInstitution = {
+              adminEmail: found.adminEmail,
+              institutionName: found.institutionName,
+              institutionCode: found.institutionCode,
+            }
+            parsed.currentUser = null
+
+            window.localStorage.setItem(AUTH_KEY, JSON.stringify(parsed))
+            router.replace('/institution/dashboard')
+          } catch {
+            setError('로그인 처리 중 오류가 발생했습니다.')
+          }
+        })
+      return
+    }
+
+    // 3) Supabase 미설정 시 기존 localStorage 로그인만 사용
     const raw = window.localStorage.getItem(AUTH_KEY)
     if (!raw) {
       setError('기관 계정을 먼저 생성해 주세요.')
@@ -38,7 +123,7 @@ export default function InstitutionLoginPage() {
     try {
       const parsed = JSON.parse(raw)
       const institutions = parsed?.institutions || []
-      const found = institutions.find((ins: any) => ins.adminEmail === adminEmail.trim())
+      const found = institutions.find((ins: any) => ins.adminEmail === email)
       if (!found || found.password !== password) {
         setError('이메일 또는 비밀번호가 올바르지 않습니다.')
         return

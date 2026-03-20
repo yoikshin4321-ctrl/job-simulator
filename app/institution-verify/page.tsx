@@ -3,6 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { supabase } from '../../src/lib/supabaseClient'
+import {
+  getInstitutionByCode,
+  getProfileByUserId,
+  getSupabaseUserId,
+  updateStudentInstitutionCode,
+} from '../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
@@ -26,6 +33,40 @@ export default function InstitutionVerifyPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+
+    if (supabase) {
+      ;(async () => {
+        const userId = await getSupabaseUserId()
+        if (!userId) {
+          setError('회원가입/로그인 후 이용 가능합니다.')
+          setCurrent(null)
+          setLoading(false)
+          return
+        }
+
+        const prof = await getProfileByUserId(userId)
+        if (!prof || prof.role !== 'student') {
+          setError('회원가입/로그인 후 이용 가능합니다.')
+          setCurrent(null)
+          setLoading(false)
+          return
+        }
+
+        if (prof.institution_code) {
+          router.replace('/simulation')
+          return
+        }
+
+        setCurrent({ email: '', name: prof.name, institutionCode: prof.institution_code })
+        setInstitutionCode(prof.institution_code || '')
+        setLoading(false)
+      })().catch(() => {
+        setError('회원가입/로그인 후 이용 가능합니다.')
+        setCurrent(null)
+        setLoading(false)
+      })
+      return
+    }
 
     const store = safeParse(window.localStorage.getItem(AUTH_KEY))
     const currentUser = store?.currentUser
@@ -58,10 +99,14 @@ export default function InstitutionVerifyPage() {
 
   const institutionName = useMemo(() => {
     if (typeof window === 'undefined') return ''
-    const store = safeParse(window.localStorage.getItem(AUTH_KEY))
-    const institutions = store?.institutions || []
-    const found = institutions.find((ins: any) => ins.institutionCode === institutionCode.trim())
-    return found?.institutionName || ''
+    if (!supabase) {
+      const store = safeParse(window.localStorage.getItem(AUTH_KEY))
+      const institutions = store?.institutions || []
+      const found = institutions.find((ins: any) => ins.institutionCode === institutionCode.trim())
+      return found?.institutionName || ''
+    }
+    // Supabase 모드에서는 useEffect에서 별도 갱신(여기 useMemo는 텍스트 placeholder)
+    return ''
   }, [institutionCode])
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -69,6 +114,51 @@ export default function InstitutionVerifyPage() {
     setError('')
 
     if (typeof window === 'undefined') return
+    if (supabase) {
+      ;(async () => {
+        try {
+          const userId = await getSupabaseUserId()
+          if (!userId) {
+            setError('회원가입/로그인 후 이용 가능합니다.')
+            return
+          }
+
+          const inst = await getInstitutionByCode(institutionCode.trim())
+          if (!inst) {
+            setError('해당 기관 코드가 존재하지 않습니다. 다시 확인해 주세요.')
+            return
+          }
+
+          const ok = await updateStudentInstitutionCode({
+            userId,
+            institutionCode: institutionCode.trim(),
+          })
+          if (!ok.ok) throw ok.error
+
+          // 안전장치: localStorage에도 반영 (다른 페이지가 아직 localStorage를 참조할 수 있어서)
+          const store = safeParse(window.localStorage.getItem(AUTH_KEY)) || {}
+          const users = store?.users || []
+          const nextUsers = users.map((u: any) => {
+            if (u.email !== store?.currentUser?.email) return u
+            return { ...u, institutionCode: institutionCode.trim() }
+          })
+          const next = {
+            ...store,
+            users: nextUsers,
+            currentUser: store?.currentUser
+              ? { ...store.currentUser, institutionCode: institutionCode.trim() }
+              : store?.currentUser,
+          }
+          window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+
+          router.replace('/simulation')
+        } catch {
+          setError('인증 처리 중 오류가 발생했습니다.')
+        }
+      })()
+      return
+    }
+
     if (!current?.email) return
 
     const store = safeParse(window.localStorage.getItem(AUTH_KEY))
