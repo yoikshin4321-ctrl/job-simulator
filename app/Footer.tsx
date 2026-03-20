@@ -107,9 +107,6 @@ export default function Footer() {
             >
               개인정보처리방침
             </Link>
-            <a href="#" className="hover:text-indigo-600 transition-colors">
-              청소년 보호정책
-            </a>
           </div>
         </div>
       </div>
