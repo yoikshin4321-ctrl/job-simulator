@@ -6,7 +6,7 @@ export default function Footer() {
   return (
     <footer className="w-full bg-slate-100 border-t border-slate-200/80 text-slate-600 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-14">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-8">
           {/* 고객센터 */}
           <div>
             <h3 className="text-sm font-bold text-slate-900 mb-3">고객센터</h3>
@@ -39,16 +39,6 @@ export default function Footer() {
               <a href="#" className={linkClass}>
                 제휴 대학 인증
               </a>
-            </nav>
-          </div>
-
-          {/* 파트너스 */}
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 mb-3">파트너스</h3>
-            <nav className="flex flex-col gap-1">
-              <Link href="/partners" className={linkClass}>
-                대학/기업용 서비스
-              </Link>
             </nav>
           </div>
 
