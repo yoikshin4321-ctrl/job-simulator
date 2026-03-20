@@ -46,6 +46,7 @@ export default function InstitutionDashboardPage() {
     adminEmail?: string
   }>(null)
   const [histories, setHistories] = useState<HistoryEntry[]>([])
+  const [selectedStudentEmail, setSelectedStudentEmail] = useState<string>('')
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -68,6 +69,71 @@ export default function InstitutionDashboardPage() {
     if (!institution?.institutionCode) return []
     return histories.filter((h) => (h.institutionCode || '') === institution.institutionCode)
   }, [histories, institution?.institutionCode])
+
+  const selectedHistories = useMemo(() => {
+    if (!selectedStudentEmail) return []
+    return myHistories
+      .filter((h) => (h.studentEmail || '') === selectedStudentEmail)
+      .sort((a, b) => (b.analyzedAt || '').localeCompare(a.analyzedAt || ''))
+  }, [myHistories, selectedStudentEmail])
+
+  const getTraitAvgFromHistory = (h: HistoryEntry): number | null => {
+    const r = h.result
+    if (!r || typeof r !== 'object') return null
+    const traitScores = TRAIT_KEYS.map((k) => {
+      const block = (r as any)[k]
+      const score = block?.score ?? block?.점수
+      return typeof score === 'number' ? score : null
+    }).filter((x): x is number => x !== null)
+    if (!traitScores.length) return null
+    return Math.round(avg(traitScores))
+  }
+
+  const selectedStudentSummary = useMemo(() => {
+    if (!selectedStudentEmail) return null
+    const runIds = new Set(selectedHistories.map((h) => h.runId || ''))
+    const runCount = Array.from(runIds).filter(Boolean).length
+    const submissionCount = selectedHistories.length
+    const traitAvgVals = selectedHistories.map(getTraitAvgFromHistory).filter((x): x is number => x !== null)
+    const overallAvg = traitAvgVals.length ? Math.round(avg(traitAvgVals)) : 0
+    const name = selectedHistories[0]?.studentName || selectedStudentEmail
+
+    return {
+      email: selectedStudentEmail,
+      name,
+      runCount,
+      submissionCount,
+      overallAvg,
+    }
+  }, [selectedHistories, selectedStudentEmail])
+
+  const selectedByRoleLevel = useMemo(() => {
+    if (!selectedStudentEmail) return []
+    const map = new Map<string, { roleId: string; levelIndex: number; submissions: number; sum: number; n: number }>()
+
+    selectedHistories.forEach((h) => {
+      const roleId = h.roleId || 'unknown'
+      const levelIndex = typeof h.levelIndex === 'number' ? h.levelIndex : 0
+      const key = `${roleId}-${levelIndex}`
+      if (!map.has(key)) {
+        map.set(key, { roleId, levelIndex, submissions: 0, sum: 0, n: 0 })
+      }
+      const bucket = map.get(key)!
+      bucket.submissions += 1
+      const traitAvg = getTraitAvgFromHistory(h)
+      if (typeof traitAvg === 'number') {
+        bucket.sum += traitAvg
+        bucket.n += 1
+      }
+    })
+
+    return Array.from(map.values()).map((v) => ({
+      roleId: v.roleId,
+      levelIndex: v.levelIndex,
+      submissions: v.submissions,
+      avgScore: v.n > 0 ? Math.round(v.sum / v.n) : 0,
+    }))
+  }, [selectedHistories, selectedStudentEmail])
 
   const aggregated = useMemo(() => {
     const studentMap = new Map<
@@ -268,6 +334,7 @@ export default function InstitutionDashboardPage() {
                     <th className="py-3 px-3 font-semibold text-slate-700">시뮬레이션 수</th>
                     <th className="py-3 px-3 font-semibold text-slate-700">평가(제출) 횟수</th>
                     <th className="py-3 px-3 font-semibold text-slate-700">평균 준비도</th>
+                    <th className="py-3 px-3 font-semibold text-slate-700 text-right"> </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -282,6 +349,15 @@ export default function InstitutionDashboardPage() {
                         <td className="py-3 px-3 font-semibold text-slate-800">{s.runs}</td>
                         <td className="py-3 px-3 text-slate-700">{s.submissions}</td>
                         <td className="py-3 px-3 font-extrabold text-indigo-700">{s.avgScore}</td>
+                        <td className="py-3 px-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedStudentEmail(s.email)}
+                            className="inline-flex items-center justify-center px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-indigo-200 transition-colors"
+                          >
+                            상세 보기
+                          </button>
+                        </td>
                       </tr>
                     ))}
                 </tbody>
@@ -289,6 +365,99 @@ export default function InstitutionDashboardPage() {
             </div>
           )}
         </div>
+
+        {/* 학생 상세 */}
+        {selectedStudentEmail && selectedStudentSummary && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm mt-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900">
+                  학생 상세 · {selectedStudentSummary.name}
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">{selectedStudentSummary.email}</p>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <span className="px-3 py-2 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-semibold border border-indigo-100">
+                  시뮬레이션 {selectedStudentSummary.runCount}회
+                </span>
+                <span className="px-3 py-2 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-semibold border border-indigo-100">
+                  제출/평가 {selectedStudentSummary.submissionCount}회
+                </span>
+                <span className="px-3 py-2 rounded-xl bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200">
+                  평균 준비도 {selectedStudentSummary.overallAvg}점
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedStudentEmail('')}
+                  className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <h3 className="text-sm font-bold text-slate-900 mb-3">직무/레벨별 요약</h3>
+                {selectedByRoleLevel.length === 0 ? (
+                  <p className="text-sm text-slate-600">아직 평가 데이터가 없습니다.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedByRoleLevel.map((row) => (
+                      <div
+                        key={`${row.roleId}-${row.levelIndex}`}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-semibold text-slate-900 truncate">
+                            {row.roleId.toUpperCase()} · Level {row.levelIndex}
+                          </p>
+                          <p className="text-[11px] text-slate-500">제출 {row.submissions}회</p>
+                        </div>
+                        <p className="text-sm font-extrabold text-indigo-700 tabular-nums">{row.avgScore}점</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <h3 className="text-sm font-bold text-slate-900 mb-3">제출 내역</h3>
+                <div className="space-y-2">
+                  {selectedHistories.slice(0, 8).map((h, idx) => {
+                    const avgScore = getTraitAvgFromHistory(h)
+                    return (
+                      <div
+                        key={`${h.runId || selectedStudentEmail}-${h.analyzedAt || idx}`}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-xs sm:text-sm font-semibold text-slate-900">
+                              {h.roleId || 'unknown'} · Level {h.levelIndex ?? '—'}
+                            </p>
+                            <p className="text-[11px] text-slate-500 truncate">
+                              {h.levelLabel || '과제명 없음'}
+                            </p>
+                          </div>
+                          <p className="text-xs sm:text-sm font-extrabold text-indigo-700 tabular-nums">
+                            {typeof avgScore === 'number' ? `${avgScore}점` : '—'}
+                          </p>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-1">
+                          {h.analyzedAt ? new Date(h.analyzedAt).toLocaleString() : ''}
+                        </p>
+                      </div>
+                    )
+                  })}
+                </div>
+                {selectedHistories.length > 8 && (
+                  <p className="text-[11px] text-slate-500 mt-3">최신 8개까지만 표시합니다.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
