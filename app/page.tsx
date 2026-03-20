@@ -76,7 +76,9 @@ export default function HomePage() {
           <div className="text-center lg:text-left">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1E293B] tracking-tight mb-6 leading-tight max-w-[36rem]">
               <span className="block whitespace-normal">글로벌 직무 분석 데이터 기반,</span>
-              <span className="block whitespace-normal">AI가 피드백하는 실무 시뮬레이션</span>
+              <span className="block whitespace-normal">
+                AI가 피드백하는 실무 <span className="whitespace-nowrap">시뮬레이션</span>
+              </span>
             </h1>
             <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mb-8 leading-relaxed mx-auto lg:mx-0">
               PM, 데이터, 마케팅 실무를 미리 경험하고, 당신의 커리어 적합도를 확인하세요.
