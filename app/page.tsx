@@ -75,8 +75,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto w-full py-16 sm:py-24 px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div className="text-center lg:text-left">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1E293B] tracking-tight mb-6 leading-tight">
-              글로벌 직무 분석 데이터 기반,<br />
-              AI가 피드백하는 실무 시뮬레이션
+              <span className="block whitespace-normal sm:whitespace-nowrap">
+                글로벌 직무 분석 데이터 기반,
+              </span>
+              <span className="block whitespace-normal sm:whitespace-nowrap">
+                AI가 피드백하는 실무 시뮬레이션
+              </span>
             </h1>
             <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mb-8 leading-relaxed mx-auto lg:mx-0">
               PM, 데이터, 마케팅 실무를 미리 경험하고, 당신의 커리어 적합도를 확인하세요.
@@ -180,7 +184,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
           <div className="max-w-5xl mx-auto text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-[#1E293B] mb-4">Why Us?</h2>
-            <p className="text-slate-600 mb-12 max-w-xl mx-auto text-center">
+            <p className="text-slate-600 mb-12 max-w-xl mx-auto text-center leading-relaxed text-balance">
               데이터와 AI로 설계된 실무 시뮬레이션으로, 당신의 역량을 객관적으로 점검합니다.
             </p>
           </div>
