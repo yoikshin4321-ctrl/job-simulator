@@ -17,6 +17,7 @@ export default function NavBar() {
   const pathname = usePathname()
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [currentInstitution, setCurrentInstitution] = useState<any>(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
   const isActive = (path: string) => {
@@ -46,12 +47,15 @@ export default function NavBar() {
         const raw = typeof window !== 'undefined' ? window.localStorage.getItem(AUTH_KEY) : null
         if (!raw) {
           setCurrentUser(null)
+          setCurrentInstitution(null)
           return
         }
         const parsed = JSON.parse(raw)
         setCurrentUser(parsed?.currentUser || null)
+        setCurrentInstitution(parsed?.currentInstitution || null)
       } catch {
         setCurrentUser(null)
+        setCurrentInstitution(null)
       }
     }
 
@@ -71,13 +75,14 @@ export default function NavBar() {
       const raw = typeof window !== 'undefined' ? window.localStorage.getItem(AUTH_KEY) : null
       if (raw) {
         const parsed = JSON.parse(raw)
-        const next = { ...(parsed || {}), currentUser: null }
+        const next = { ...(parsed || {}), currentUser: null, currentInstitution: null }
         window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
       }
     } catch {
       // ignore
     }
     setCurrentUser(null)
+    setCurrentInstitution(null)
     setMenuOpen(false)
     router.replace('/')
   }
@@ -116,7 +121,26 @@ export default function NavBar() {
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            {currentUser ? (
+            {currentInstitution ? (
+              <>
+                <span className="hidden sm:inline text-xs text-slate-500 truncate max-w-[140px]">
+                  {currentInstitution.institutionName || '기관'} 기관 관리자
+                </span>
+                <Link
+                  href="/institution/dashboard"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                >
+                  대시보드
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-slate-800 hover:bg-slate-900 transition-colors"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : currentUser ? (
               <>
                 <span className="hidden sm:inline text-xs text-slate-500 truncate max-w-[120px]">
                   {currentUser.name || currentUser.email} 님

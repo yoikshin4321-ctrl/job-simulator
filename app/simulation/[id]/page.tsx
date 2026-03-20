@@ -114,6 +114,23 @@ export default function SimulationDetailPage({
   const roleKey = roleId === 'da' || roleId === 'marketer' ? roleId : 'pm'
   const roleTitle = ROLE_LABEL[roleKey] || ROLE_LABEL.pm
 
+  const AUTH_KEY = 'job_sim_auth'
+  const createRunId = () => {
+    try {
+      if (typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function') {
+        return (crypto as any).randomUUID() as string
+      }
+    } catch {
+      // ignore
+    }
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  }
+
+  const runIdRef = useRef<string>(createRunId())
+  const [studentMeta, setStudentMeta] = useState<null | { email: string; name: string; institutionCode: string }>(
+    null,
+  )
+
   const [flowStep, setFlowStep] = useState<1 | 2 | 3>(1)
   /** 레벨별로 이미 출제된 variant(1~15) — ref로 두어 비동기 클로저에 안 걸리게 함 */
   const usedVariantsRef = useRef<Record<number, number[]>>({ 1: [], 2: [], 3: [] })
@@ -166,7 +183,28 @@ export default function SimulationDetailPage({
   )
 
   useEffect(() => {
+    // 로그인한 학생 정보를 로컬스토리지에서 읽어서, 기관 대시보드 집계를 위한 메타데이터를 붙임
+    try {
+      const raw = window.localStorage.getItem(AUTH_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      const current = parsed?.currentUser
+      if (!current?.email) return
+      const users = parsed?.users || []
+      const found = users.find((u: any) => u.email === current.email)
+      setStudentMeta({
+        email: current.email,
+        name: current.name || found?.name || '',
+        institutionCode: found?.institutionCode || '',
+      })
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  useEffect(() => {
     usedVariantsRef.current = { 1: [], 2: [], 3: [] }
+    runIdRef.current = createRunId()
     setFlowStep(1)
     setStepRecords([])
     void loadTaskForStep(1)
@@ -175,6 +213,7 @@ export default function SimulationDetailPage({
   const handleReset = () => {
     setFlowStep(1)
     usedVariantsRef.current = { 1: [], 2: [], 3: [] }
+    runIdRef.current = createRunId()
     setStepRecords([])
     setInitialLoading(true)
     void loadTaskForStep(1)
@@ -226,6 +265,10 @@ export default function SimulationDetailPage({
               traitBlock[k] = { score: row.score, reason: row.reason || '' }
             }
           })
+          const studentEmail = studentMeta?.email || ''
+          const studentName = studentMeta?.name || ''
+          const institutionCode = studentMeta?.institutionCode || ''
+          const runId = runIdRef.current
           parsedHistory.push({
             roleId: roleKey,
             levelIndex: flowStep,
@@ -233,6 +276,11 @@ export default function SimulationDetailPage({
             answer,
             result: Object.keys(traitBlock).length ? traitBlock : parsed,
             analyzedAt: new Date().toISOString(),
+            studentEmail,
+            studentName,
+            institutionCode,
+            runId,
+            isResubmission,
           })
           window.localStorage.setItem(historyKey, JSON.stringify(parsedHistory))
         } catch {
@@ -278,12 +326,20 @@ export default function SimulationDetailPage({
       })
 
       if (typeof window !== 'undefined') {
+        const studentEmail = studentMeta?.email || ''
+        const studentName = studentMeta?.name || ''
+        const institutionCode = studentMeta?.institutionCode || ''
+        const runId = runIdRef.current
         window.localStorage.setItem(
           'job_sim_ai_result',
           JSON.stringify({
             roleId: roleKey,
             result: parsed,
             analyzedAt: new Date().toISOString(),
+            studentEmail,
+            studentName,
+            institutionCode,
+            runId,
           }),
         )
       }

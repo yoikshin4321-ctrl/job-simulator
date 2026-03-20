@@ -21,6 +21,8 @@ export default function SignupPage() {
   const [school, setSchool] = useState('')
   const [major, setMajor] = useState('')
   const [status, setStatus] = useState('대학교 재학')
+  // B2B 연동용: 학생이 참여하는 기관 코드(선택)
+  const [institutionCode, setInstitutionCode] = useState('')
 
   // Step 3 - 관심 직무
   const [interests, setInterests] = useState<string[]>([])
@@ -80,7 +82,12 @@ export default function SignupPage() {
 
     if (typeof window === 'undefined') return
 
-    let store: { users: any[]; currentUser: any | null } = { users: [], currentUser: null }
+    let store: { users: any[]; institutions?: any[]; currentUser: any | null; currentInstitution?: any | null } = {
+      users: [],
+      institutions: [],
+      currentUser: null,
+      currentInstitution: null,
+    }
     const raw = window.localStorage.getItem(AUTH_KEY)
     if (raw) {
       try {
@@ -104,6 +111,7 @@ export default function SignupPage() {
       major: major.trim(),
       status,
       interests,
+      institutionCode: institutionCode.trim() || '',
       createdAt: new Date().toISOString(),
     }
 
@@ -263,6 +271,25 @@ export default function SignupPage() {
                   />
                 </div>
                 <div>
+                  <label
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                    htmlFor="institutionCode"
+                  >
+                    기관 코드 (선택)
+                  </label>
+                  <input
+                    id="institutionCode"
+                    type="text"
+                    value={institutionCode}
+                    onChange={(e) => setInstitutionCode(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                    placeholder="대학/기업에서 제공한 코드"
+                  />
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    기관 대시보드에서 학생/취준생 데이터를 집계하기 위해 사용됩니다.
+                  </p>
+                </div>
+                <div>
                   <p className="block text-sm font-medium text-slate-700 mb-2">현재 상태</p>
                   <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
                     {['대학교 재학', '졸업 예정', '취업 준비 중', '현직자'].map((option) => (
@@ -353,6 +380,16 @@ export default function SignupPage() {
             이미 계정이 있다면{' '}
             <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-700">
               로그인
+            </Link>
+            으로 이동해 주세요.
+          </p>
+          <p className="mt-2 text-xs text-slate-500 text-center md:text-left">
+            기관 담당자라면{' '}
+            <Link
+              href="/institution-signup"
+              className="font-semibold text-indigo-600 hover:text-indigo-700"
+            >
+              기관 회원가입
             </Link>
             으로 이동해 주세요.
           </p>
