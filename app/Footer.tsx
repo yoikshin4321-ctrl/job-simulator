@@ -36,9 +36,9 @@ export default function Footer() {
               <a href="#" className={linkClass}>
                 공지사항
               </a>
-              <a href="#" className={linkClass}>
+              <Link href="/institution-verify" className={linkClass}>
                 제휴 대학 인증
-              </a>
+              </Link>
             </nav>
           </div>
 
