@@ -36,8 +36,11 @@ export default function InstitutionVerifyPage() {
       return
     }
 
+    // 비회원이면 로딩 화면을 길게 띄우지 말고, 바로 안내 페이지를 보여준다.
     if (!currentUser?.email) {
-      router.replace('/login')
+      setError('회원가입/로그인 후 이용 가능합니다.')
+      setCurrent(null)
+      setLoading(false)
       return
     }
 
@@ -120,10 +123,25 @@ export default function InstitutionVerifyPage() {
     return (
       <div className="min-h-screen w-full bg-[#F8FAFC] flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-6 text-center">
-          <p className="text-sm font-semibold text-slate-900">로그인이 필요합니다.</p>
-          <Link href="/login" className="mt-3 inline-flex px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold">
-            로그인하기
-          </Link>
+          <p className="text-sm font-semibold text-slate-900">회원 전용 기능입니다.</p>
+          <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+            {error || '회원가입/로그인 후 이용 가능합니다.'}
+          </p>
+
+          <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
+            <Link
+              href="/login"
+              className="inline-flex px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors"
+            >
+              로그인
+            </Link>
+            <Link
+              href="/signup"
+              className="inline-flex px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+            >
+              회원가입
+            </Link>
+          </div>
         </div>
       </div>
     )
