@@ -145,6 +145,12 @@ export default function NavBar() {
                 <span className="hidden sm:inline text-xs text-slate-500 truncate max-w-[120px]">
                   {currentUser.name || currentUser.email} 님
                 </span>
+                <Link
+                  href="/my"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                >
+                  내 정보
+                </Link>
                 <button
                   type="button"
                   onClick={handleLogout}
