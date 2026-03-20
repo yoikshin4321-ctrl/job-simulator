@@ -182,7 +182,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
           <div className="max-w-5xl mx-auto text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-[#1E293B] mb-4">Why Us?</h2>
-            <p className="text-slate-600 mb-12 max-w-xl mx-auto text-center leading-relaxed">
+            <p className="text-slate-600 mb-12 max-w-5xl mx-auto text-center leading-relaxed">
               데이터와 AI로 설계된 실무 시뮬레이션으로, 당신의 역량을 객관적으로 점검합니다.
             </p>
           </div>
