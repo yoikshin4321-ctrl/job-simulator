@@ -46,15 +46,9 @@ export default function Footer() {
           <div>
             <h3 className="text-sm font-bold text-slate-900 mb-3">파트너스</h3>
             <nav className="flex flex-col gap-1">
-              <a href="#" className={linkClass}>
-                기업 제휴 문의
-              </a>
-              <a href="#" className={linkClass}>
-                교육 기관 제휴
-              </a>
-              <a href="#" className={linkClass}>
-                콘텐츠 제휴
-              </a>
+              <Link href="/partners" className={linkClass}>
+                대학/기업용 서비스
+              </Link>
             </nav>
           </div>
 
@@ -104,12 +98,15 @@ export default function Footer() {
         <div className="mt-10 pt-8 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm">
           <p className="text-slate-500">© 2026 JOB-EX. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-slate-600">
-            <a href="#" className="hover:text-indigo-600 transition-colors">
+            <Link href="/terms" className="hover:text-indigo-600 transition-colors">
               이용약관
-            </a>
-            <a href="#" className="font-bold text-slate-900 hover:text-indigo-700 transition-colors">
+            </Link>
+            <Link
+              href="/privacy"
+              className="font-bold text-slate-900 hover:text-indigo-700 transition-colors"
+            >
               개인정보처리방침
-            </a>
+            </Link>
             <a href="#" className="hover:text-indigo-600 transition-colors">
               청소년 보호정책
             </a>
