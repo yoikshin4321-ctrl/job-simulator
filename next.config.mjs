@@ -2,9 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: new URL('.', import.meta.url).pathname,
-  // OneDrive 동기화 폴더 안의 `.next`는 scandir UNKNOWN(-4094)로 자주 깨짐 → 같은 프로젝트 안 `next-cache` 사용
-  // (프로젝트 밖 절대 경로는 Next가 join 처리할 때 모듈 해석이 깨지므로 쓰지 않음)
-  distDir: 'next-cache',
+  // 로컬(OneDrive): `next-cache` — `.next` scandir 오류 회피. Vercel은 반드시 `.next` (플랫폼이 그 경로를 읽음)
+  distDir: process.env.VERCEL ? '.next' : 'next-cache',
   env: {
     VITE_OPENAI_API_KEY: process.env.VITE_OPENAI_API_KEY,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,

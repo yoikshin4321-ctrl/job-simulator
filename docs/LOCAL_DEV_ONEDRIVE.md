@@ -32,4 +32,4 @@ npm run dev
 
 ## Vercel 배포
 
-배포 환경은 기본적으로 `.next`를 쓰지 않고, 빌드 시 `next-cache` 설정이 그대로 적용됩니다. 문제 없으면 그대로 두면 됩니다.
+`next.config.mjs`에서 **`VERCEL` 환경변수가 있을 때는 `distDir: '.next'`** 로 자동 전환됩니다. Vercel이 `routes-manifest.json` 등을 `.next`에서 찾기 때문입니다. 로컬만 `next-cache`를 씁니다.
