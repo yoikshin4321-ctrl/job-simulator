@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase, supabaseConfigured } from '../../src/lib/supabaseClient'
-import { upsertProfile } from '../../src/lib/supabaseDb'
+import { isLikelyDeployedHostname, supabase, supabaseConfigured } from '../../src/lib/supabaseClient'
+import { formatSupabaseLikeError, upsertProfile } from '../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
@@ -100,11 +100,10 @@ export default function SignupPage() {
 
     // Vercel에서 환경변수가 주입되지 않으면 supabase는 null이 되고, DB 저장은 localStorage fallback만 동작합니다.
     // (사용자 입장에서 "profiles가 안 쌓임"이 발생하므로 즉시 안내)
-    const host = window.location.hostname || ''
-    const likelyVercel = host.includes('vercel.app')
-    if (likelyVercel && !supabaseConfigured) {
-      setError('이 배포(Vercel)에서는 Supabase 환경변수가 주입되지 않아 DB 저장이 동작하지 않습니다. Vercel Environment Variables의 NEXT_PUBLIC_SUPABASE_URL/ANON_KEY를 확인해 주세요.')
-      // localStorage 회원가입은 유지해서 서비스 흐름은 이어가게 함
+    if (isLikelyDeployedHostname() && !supabaseConfigured) {
+      setError(
+        '이 배포 환경에서는 Supabase 환경변수가 빌드에 포함되지 않았습니다. Vercel → 해당 프로젝트 → Settings → Environment Variables에 NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY를 넣고 Redeploy 해 주세요.',
+      )
       return
     }
 
@@ -139,7 +138,7 @@ export default function SignupPage() {
           return
         }
 
-        await upsertProfile({
+        const profRes = await upsertProfile({
           userId,
           role: 'student',
           name: newUser.name,
@@ -149,6 +148,10 @@ export default function SignupPage() {
           interests: newUser.interests,
           institution_code: newUser.institutionCode,
         })
+        if (!profRes.ok) {
+          setError(`DB에 프로필을 저장하지 못했습니다: ${formatSupabaseLikeError(profRes.error)}`)
+          return
+        }
 
         // 안전장치: 기존 localStorage shape도 유지해서 화면이 바로 깨지지 않게 함
         const next = {
@@ -173,8 +176,11 @@ export default function SignupPage() {
         router.replace('/')
         return
       } catch (e: any) {
-        // Supabase 실패 시 기존 로컬 회원가입으로 fallback
-        // (기존 데이터가 유지되므로 “데이터 유실” 방지)
+        if (isLikelyDeployedHostname()) {
+          setError(`Supabase 회원가입 처리 중 오류: ${e?.message || formatSupabaseLikeError(e)}`)
+          return
+        }
+        // 로컬 개발: Supabase 실패 시 기존 localStorage 회원가입으로 fallback
       }
     }
 

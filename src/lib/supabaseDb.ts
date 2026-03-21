@@ -1,5 +1,14 @@
 import { supabase } from './supabaseClient'
 
+/** Supabase/PostgREST 에러 객체를 사용자에게 보여줄 짧은 문자열로 */
+export function formatSupabaseLikeError(e: unknown): string {
+  if (e == null) return '알 수 없는 오류'
+  if (typeof e === 'object' && e !== null && 'message' in e && typeof (e as { message: unknown }).message === 'string') {
+    return (e as { message: string }).message
+  }
+  return String(e)
+}
+
 export type ProfileRole = 'student' | 'institution_admin'
 
 export type ProfileRow = {

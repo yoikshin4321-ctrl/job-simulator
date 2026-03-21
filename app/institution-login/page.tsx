@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '../../src/lib/supabaseClient'
-import { getInstitutionByAdmin, getProfileByUserId } from '../../src/lib/supabaseDb'
+import { isLikelyDeployedHostname, supabase } from '../../src/lib/supabaseClient'
+import { formatSupabaseLikeError, getInstitutionByAdmin, getProfileByUserId } from '../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
@@ -81,8 +81,12 @@ export default function InstitutionLoginPage() {
           window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
           router.replace('/institution/dashboard')
         })
-        .catch(() => {
-          // 2) Supabase 실패 시 localStorage fallback (데이터 유실 방지)
+        .catch((e: any) => {
+          if (isLikelyDeployedHostname()) {
+            setError(`Supabase 기관 로그인 실패: ${e?.message || formatSupabaseLikeError(e)}`)
+            return
+          }
+          // 2) 로컬: Supabase 실패 시 localStorage fallback
           const raw = window.localStorage.getItem(AUTH_KEY)
           if (!raw) {
             setError('기관 계정을 먼저 생성해 주세요.')

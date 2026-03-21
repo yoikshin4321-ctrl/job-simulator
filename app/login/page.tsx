@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '../../src/lib/supabaseClient'
-import { getProfileByUserId } from '../../src/lib/supabaseDb'
+import { isLikelyDeployedHostname, supabase } from '../../src/lib/supabaseClient'
+import { formatSupabaseLikeError, getProfileByUserId, upsertProfile } from '../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
@@ -63,7 +63,26 @@ export default function LoginPage() {
           const userId = data.user?.id
           if (!userId) throw new Error('Supabase user not found')
 
-          const prof = await getProfileByUserId(userId)
+          let prof = await getProfileByUserId(userId)
+          // 과거에 auth만 생성되고 profiles 행이 없던 경우(특히 배포 환경) 복구
+          if (!prof) {
+            const emailLocal = email.trim()
+            const displayName = emailLocal.includes('@') ? emailLocal.split('@')[0] : emailLocal || '사용자'
+            const repair = await upsertProfile({
+              userId,
+              role: 'student',
+              name: displayName,
+              school: '',
+              major: '',
+              status: '',
+              interests: [],
+              institution_code: '',
+            })
+            if (!repair.ok) {
+              throw new Error(`프로필이 없고 DB 복구에도 실패했습니다: ${formatSupabaseLikeError(repair.error)}`)
+            }
+            prof = await getProfileByUserId(userId)
+          }
           if (!prof) throw new Error('프로필 정보를 불러오지 못했습니다.')
 
           // 기존 UI 호환을 위해 localStorage에도 동일 shape로 저장 (안전: 삭제하지 않음)
@@ -81,8 +100,12 @@ export default function LoginPage() {
 
           router.replace(prof.role === 'institution_admin' ? '/institution/dashboard' : '/')
         })
-        .catch(() => {
-          // 2) Supabase 실패 시 기존 localStorage 로그인으로 fallback
+        .catch((e: any) => {
+          if (isLikelyDeployedHostname()) {
+            setError(`Supabase 로그인 실패: ${e?.message || formatSupabaseLikeError(e)}`)
+            return
+          }
+          // 2) 로컬 개발: Supabase 실패 시 기존 localStorage 로그인으로 fallback
           const raw = window.localStorage.getItem(AUTH_KEY)
           if (!raw) {
             setError('가입된 계정을 먼저 생성해 주세요.')

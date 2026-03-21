@@ -7,6 +7,9 @@ const nextConfig = {
   distDir: process.env.VERCEL ? '.next' : 'next-dist',
   env: {
     VITE_OPENAI_API_KEY: process.env.VITE_OPENAI_API_KEY,
+    // Vercel 빌드 시 클라이언트 번들에 확실히 주입되도록 명시 (NEXT_PUBLIC_* 기본 동작 보강)
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
   typescript: {
     ignoreBuildErrors: true, // 타입 에러가 있어도 빌드를 끝까지 진행

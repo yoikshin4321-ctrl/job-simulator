@@ -28,17 +28,10 @@ export const supabase = canCreate
 
 export const supabaseConfigured = canCreate
 
-// Vercel 환경변수 반영 여부를 빠르게 확인하기 위한 디버그 로그
-// (민감정보는 제외하고 "설정 여부/길이"만 출력)
-if (typeof window !== 'undefined') {
-  // eslint-disable-next-line no-console
-  console.warn(
-    '[supabase] configured=',
-    canCreate,
-    'url=',
-    !!SUPABASE_URL,
-    'anonKeyLen=',
-    (SUPABASE_ANON_KEY || '').length,
-  )
+/** localhost가 아닌 배포( Vercel / 커스텀 도메인 )에서 Supabase 미설정 시 안내용 */
+export function isLikelyDeployedHostname(): boolean {
+  if (typeof window === 'undefined') return false
+  const h = window.location.hostname
+  return h !== 'localhost' && !h.startsWith('127.')
 }
 

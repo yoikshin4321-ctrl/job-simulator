@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '../../src/lib/supabaseClient'
-import { insertInstitution, upsertProfile } from '../../src/lib/supabaseDb'
+import { isLikelyDeployedHostname, supabase, supabaseConfigured } from '../../src/lib/supabaseClient'
+import { formatSupabaseLikeError, insertInstitution, upsertProfile } from '../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
@@ -81,6 +81,13 @@ export default function InstitutionSignupPage() {
 
     if (typeof window === 'undefined') return
 
+    if (isLikelyDeployedHostname() && !supabaseConfigured) {
+      setError(
+        '이 배포 환경에서는 Supabase 환경변수가 빌드에 포함되지 않았습니다. Vercel 프로젝트 Environment Variables에 NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY를 넣고 Redeploy 해 주세요.',
+      )
+      return
+    }
+
     // 1) Supabase 기반 기관 생성
     if (supabase) {
       try {
@@ -100,14 +107,18 @@ export default function InstitutionSignupPage() {
           return
         }
 
-        await insertInstitution({
+        const instRes = await insertInstitution({
           adminId: userId,
           institutionCode,
           institutionName: institutionName.trim(),
           contactEmail: contactEmail.trim() || 'job-ex@gmail.com',
         })
+        if (!instRes.ok) {
+          setError(`DB에 기관 정보를 저장하지 못했습니다: ${formatSupabaseLikeError(instRes.error)}`)
+          return
+        }
 
-        await upsertProfile({
+        const profRes = await upsertProfile({
           userId,
           role: 'institution_admin',
           name: adminName.trim(),
@@ -117,6 +128,10 @@ export default function InstitutionSignupPage() {
           interests: [],
           institution_code: institutionCode,
         })
+        if (!profRes.ok) {
+          setError(`DB에 관리자 프로필을 저장하지 못했습니다: ${formatSupabaseLikeError(profRes.error)}`)
+          return
+        }
 
         const next = {
           users: [],
@@ -131,8 +146,12 @@ export default function InstitutionSignupPage() {
         window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
         router.replace('/institution/dashboard')
         return
-      } catch {
-        // Supabase 실패 시 localStorage fallback으로 “데이터 유실 없이” 이어감
+      } catch (e: any) {
+        if (isLikelyDeployedHostname()) {
+          setError(`Supabase 기관 가입 처리 중 오류: ${e?.message || formatSupabaseLikeError(e)}`)
+          return
+        }
+        // 로컬: Supabase 실패 시 localStorage fallback
       }
     }
 
