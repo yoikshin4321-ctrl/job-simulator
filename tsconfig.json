@@ -25,11 +25,11 @@
     "strictNullChecks": true
   },
   "include": [
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "../../../AppData/Local/Temp/job-simulator-next/types/**/*.ts",
-    "next-env.d.ts",
-    "next-dist/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "next-cache/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

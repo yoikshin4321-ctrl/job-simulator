@@ -13,6 +13,7 @@ dist-ssr
 
 # Next.js
 .next
+next-cache
 next-dist
 out
 *.local
@@ -21,6 +22,9 @@ out
 
 # OneDrive placeholder files (동기화 충돌 방지)
 *.lnk
+
+# 로컬 와이어프레임/캡처 산출물
+wireframe-output/
 
 # Editor directories and files
 .vscode/*

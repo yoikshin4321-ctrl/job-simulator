@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { notifyAuthStorageUpdated } from '../../src/lib/authEvents'
+import { requestNavAuthRefresh } from '../../src/lib/navAuthSync'
 import { isLikelyDeployedHostname, supabase } from '../../src/lib/supabaseClient'
 import { formatSupabaseLikeError, getProfileByUserId, upsertProfile } from '../../src/lib/supabaseDb'
 
@@ -97,6 +99,8 @@ export default function LoginPage() {
           } as any
 
           window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+          notifyAuthStorageUpdated()
+          requestNavAuthRefresh()
 
           router.replace(prof.role === 'institution_admin' ? '/institution/dashboard' : '/')
         })
@@ -126,6 +130,8 @@ export default function LoginPage() {
               currentUser: { email: found.email, name: found.name },
             }
             window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+            notifyAuthStorageUpdated()
+            requestNavAuthRefresh()
             router.replace('/')
           } catch {
             setError('로그인 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
@@ -155,6 +161,8 @@ export default function LoginPage() {
         currentUser: { email: found.email, name: found.name },
       }
       window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+      notifyAuthStorageUpdated()
+      requestNavAuthRefresh()
       router.replace('/')
     } catch {
       setError('로그인 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')

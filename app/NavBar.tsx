@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
+import { JOB_SIM_AUTH_UPDATED_EVENT, notifyAuthStorageUpdated } from '../src/lib/authEvents'
+import { subscribeNavAuthRefresh } from '../src/lib/navAuthSync'
 import { supabase } from '../src/lib/supabaseClient'
 import { getInstitutionByAdmin, getProfileByUserId } from '../src/lib/supabaseDb'
 
@@ -15,12 +17,28 @@ const NAV_ITEMS = [
   { href: '/partners', label: '대학/기업용 서비스', match: '/partners' as const },
 ] as const
 
+function applyAuthFromLocalStorage(): { user: any; institution: any } | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(AUTH_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return {
+      user: parsed?.currentUser ?? null,
+      institution: parsed?.currentInstitution ?? null,
+    }
+  } catch {
+    return null
+  }
+}
+
 export default function NavBar() {
   const pathname = usePathname()
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [currentInstitution, setCurrentInstitution] = useState<any>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const readAuthGenRef = useRef(0)
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/'
@@ -43,24 +61,62 @@ export default function NavBar() {
     setMenuOpen(false)
   }, [pathname])
 
+  // 로그인/가입 후 router.replace로 경로만 바뀌는 경우, 번들 분리로 requestNavAuthRefresh가
+  // 빈 Set을 호출할 수 있어 여기서 localStorage와 헤더 상태를 다시 맞춤
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = window.localStorage.getItem(AUTH_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      setCurrentUser(parsed?.currentUser ?? null)
+      setCurrentInstitution(parsed?.currentInstitution ?? null)
+    } catch {
+      // ignore
+    }
+  }, [pathname])
+
   useEffect(() => {
     const readAuth = () => {
+      const gen = ++readAuthGenRef.current
       try {
         const raw = typeof window !== 'undefined' ? window.localStorage.getItem(AUTH_KEY) : null
         if (!raw) {
-          // localStorage에 인증 정보가 없으면 Supabase 세션을 확인해서 멀티디바이스 대응
           if (supabase) {
             void (async () => {
               try {
                 const { data } = await supabase.auth.getSession()
+                if (gen !== readAuthGenRef.current) return
+                const fromLs = applyAuthFromLocalStorage()
+                if (fromLs && (fromLs.user || fromLs.institution)) {
+                  setCurrentUser(fromLs.user)
+                  setCurrentInstitution(fromLs.institution)
+                  return
+                }
+
                 const session = data?.session
                 if (!session) {
+                  if (gen !== readAuthGenRef.current) return
+                  const again = applyAuthFromLocalStorage()
+                  if (again && (again.user || again.institution)) {
+                    setCurrentUser(again.user)
+                    setCurrentInstitution(again.institution)
+                    return
+                  }
                   setCurrentUser(null)
                   setCurrentInstitution(null)
                   return
                 }
 
                 const prof = await getProfileByUserId(session.user.id)
+                if (gen !== readAuthGenRef.current) return
+                const fromLs2 = applyAuthFromLocalStorage()
+                if (fromLs2 && (fromLs2.user || fromLs2.institution)) {
+                  setCurrentUser(fromLs2.user)
+                  setCurrentInstitution(fromLs2.institution)
+                  return
+                }
+
                 if (!prof) {
                   setCurrentUser(null)
                   setCurrentInstitution(null)
@@ -69,6 +125,7 @@ export default function NavBar() {
 
                 if (prof.role === 'institution_admin') {
                   const inst = await getInstitutionByAdmin(session.user.id)
+                  if (gen !== readAuthGenRef.current) return
                   setCurrentInstitution(
                     inst
                       ? { institutionName: inst.institution_name, institutionCode: inst.institution_code }
@@ -80,6 +137,13 @@ export default function NavBar() {
                   setCurrentUser({ email: session.user.email, name: prof.name })
                 }
               } catch {
+                if (gen !== readAuthGenRef.current) return
+                const fromLs = applyAuthFromLocalStorage()
+                if (fromLs && (fromLs.user || fromLs.institution)) {
+                  setCurrentUser(fromLs.user)
+                  setCurrentInstitution(fromLs.institution)
+                  return
+                }
                 setCurrentUser(null)
                 setCurrentInstitution(null)
               }
@@ -102,13 +166,28 @@ export default function NavBar() {
 
     readAuth()
 
+    const unsubSync = subscribeNavAuthRefresh(readAuth)
+
     const onStorage = (e: StorageEvent) => {
-      if (e.key === AUTH_KEY) {
-        readAuth()
-      }
+      if (e.key === AUTH_KEY) readAuth()
     }
+    const onSameTab = () => readAuth()
+
     window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
+    window.addEventListener(JOB_SIM_AUTH_UPDATED_EVENT, onSameTab)
+
+    const subscription = supabase?.auth?.onAuthStateChange?.(() => {
+      readAuth()
+    })
+
+    const unsubAuth = subscription?.data?.subscription
+
+    return () => {
+      unsubSync()
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener(JOB_SIM_AUTH_UPDATED_EVENT, onSameTab)
+      unsubAuth?.unsubscribe()
+    }
   }, [])
 
   const handleLogout = () => {
@@ -123,13 +202,12 @@ export default function NavBar() {
       // ignore
     }
     if (supabase) {
-      void supabase.auth.signOut().catch(() => {
-        // ignore
-      })
+      void supabase.auth.signOut().catch(() => {})
     }
     setCurrentUser(null)
     setCurrentInstitution(null)
     setMenuOpen(false)
+    notifyAuthStorageUpdated()
     router.replace('/')
   }
 
@@ -137,7 +215,6 @@ export default function NavBar() {
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200/80 shadow-sm w-full">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 min-h-16 flex flex-col">
         <div className="h-16 flex items-center justify-between gap-2">
-          {/* 로고 + 데스크톱 내비 */}
           <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
             <Link
               href="/"
@@ -154,7 +231,6 @@ export default function NavBar() {
             </nav>
           </div>
 
-          {/* 우측: 모바일 메뉴 버튼 + 인증 */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <button
               type="button"
@@ -224,7 +300,6 @@ export default function NavBar() {
           </div>
         </div>
 
-        {/* 모바일·좁은 화면 전용 메뉴 패널 */}
         {menuOpen && (
           <div
             id="mobile-nav"

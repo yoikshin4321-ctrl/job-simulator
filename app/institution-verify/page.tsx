@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { notifyAuthStorageUpdated } from '../../src/lib/authEvents'
+import { requestNavAuthRefresh } from '../../src/lib/navAuthSync'
 import { supabase } from '../../src/lib/supabaseClient'
 import {
   getInstitutionByCode,
@@ -150,6 +152,8 @@ export default function InstitutionVerifyPage() {
               : store?.currentUser,
           }
           window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+          notifyAuthStorageUpdated()
+          refreshAuth()
 
           router.replace('/simulation')
         } catch {
@@ -195,6 +199,8 @@ export default function InstitutionVerifyPage() {
     }
 
     window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+    notifyAuthStorageUpdated()
+    requestNavAuthRefresh()
     router.replace('/simulation')
   }
 

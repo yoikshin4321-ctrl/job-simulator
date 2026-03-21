@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { notifyAuthStorageUpdated } from '../../src/lib/authEvents'
+import { requestNavAuthRefresh } from '../../src/lib/navAuthSync'
 import { isLikelyDeployedHostname, supabase, supabaseConfigured } from '../../src/lib/supabaseClient'
 import { formatSupabaseLikeError, upsertProfile } from '../../src/lib/supabaseDb'
 
@@ -173,6 +175,8 @@ export default function SignupPage() {
         } as any
 
         window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+        notifyAuthStorageUpdated()
+        requestNavAuthRefresh()
         router.replace('/')
         return
       } catch (e: any) {
@@ -212,6 +216,8 @@ export default function SignupPage() {
     }
 
     window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+    notifyAuthStorageUpdated()
+    requestNavAuthRefresh()
     router.replace('/')
   }
 

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { notifyAuthStorageUpdated } from '../../src/lib/authEvents'
+import { requestNavAuthRefresh } from '../../src/lib/navAuthSync'
 import { supabase } from '../../src/lib/supabaseClient'
 import { fetchStepResultsForUser, getProfileByUserId, getSupabaseUserId, updateStudentInterests } from '../../src/lib/supabaseDb'
 
@@ -160,8 +162,10 @@ export default function MyPage() {
           return { ...u, interests }
         })
 
-        const next = { ...parsed, users, currentUser: parsed.currentUser }
+        const next = { ...parsed, users: nextUsers, currentUser: parsed.currentUser }
         window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+        notifyAuthStorageUpdated()
+        requestNavAuthRefresh()
         setSaveStatus('saved')
       } catch {
         setError('저장에 실패했습니다.')

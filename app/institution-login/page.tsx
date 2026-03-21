@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { notifyAuthStorageUpdated } from '../../src/lib/authEvents'
+import { requestNavAuthRefresh } from '../../src/lib/navAuthSync'
 import { isLikelyDeployedHostname, supabase } from '../../src/lib/supabaseClient'
 import { formatSupabaseLikeError, getInstitutionByAdmin, getProfileByUserId } from '../../src/lib/supabaseDb'
 
@@ -79,6 +81,8 @@ export default function InstitutionLoginPage() {
           }
 
           window.localStorage.setItem(AUTH_KEY, JSON.stringify(next))
+          notifyAuthStorageUpdated()
+          requestNavAuthRefresh()
           router.replace('/institution/dashboard')
         })
         .catch((e: any) => {
@@ -109,6 +113,8 @@ export default function InstitutionLoginPage() {
             parsed.currentUser = null
 
             window.localStorage.setItem(AUTH_KEY, JSON.stringify(parsed))
+            notifyAuthStorageUpdated()
+            refreshAuth()
             router.replace('/institution/dashboard')
           } catch {
             setError('로그인 처리 중 오류가 발생했습니다.')
@@ -141,6 +147,8 @@ export default function InstitutionLoginPage() {
       parsed.currentUser = null
 
       window.localStorage.setItem(AUTH_KEY, JSON.stringify(parsed))
+      notifyAuthStorageUpdated()
+      requestNavAuthRefresh()
       router.replace('/institution/dashboard')
     } catch {
       setError('로그인 처리 중 오류가 발생했습니다.')
