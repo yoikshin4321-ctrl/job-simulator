@@ -1,8 +1,41 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 export default function PartnersPage() {
+  const [selectedPreview, setSelectedPreview] = useState<null | { src: string; title: string }>(null)
+
+  useEffect(() => {
+    if (!selectedPreview) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedPreview(null)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [selectedPreview])
+
+  const previewCards = [
+    {
+      src: '/institution-previews/dashboard.png',
+      alt: '기관 대시보드 예시',
+      title: '기관 대시보드',
+      description: '학생 수, 시뮬레이션 진행, 기능별 활동 집계를 한눈에 확인',
+    },
+    {
+      src: '/institution-previews/counseling-guides.png',
+      alt: '상담 가이드 예시',
+      title: '상담 가이드',
+      description: '학생 결과 기반 상담 단계와 후속 연계 템플릿 제공',
+    },
+    {
+      src: '/institution-previews/students.png',
+      alt: '학생 현황 예시',
+      title: '학생 현황',
+      description: '개별 학생별 준비도, 우선 상담 항목, 최근 활동 상세 확인',
+    },
+  ] as const
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] w-full">
       <section className="w-full bg-white border-b border-slate-200/60">
@@ -49,6 +82,34 @@ export default function PartnersPage() {
                 단순 출석·완료 여부가 아닌, 실제 과제 수행 기록과 역량 지표를 바탕으로 맞춤 상담과 후속 프로그램 대상자를 선별할 수 있어
                 기관 운영팀과 학생/지원자 모두 만족하는 운영이 가능합니다.
               </p>
+            </div>
+          </section>
+
+          {/* 기관용 화면 예시 */}
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">기관용 화면 예시</h2>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                실제 학생 활동 데이터가 있는 상태를 기준으로 기관이 확인할 수 있는 화면입니다.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+              {previewCards.map((card) => (
+                <button
+                  key={card.src}
+                  type="button"
+                  onClick={() => setSelectedPreview({ src: card.src, title: card.title })}
+                  className="rounded-2xl border border-slate-200 bg-white overflow-hidden text-left hover:shadow-md transition-all"
+                >
+                  <img src={card.src} alt={card.alt} className="w-full h-44 object-cover" />
+                  <div className="p-4">
+                    <p className="text-sm font-semibold text-slate-900">{card.title}</p>
+                    <p className="text-xs text-slate-600 mt-1">{card.description}</p>
+                    <p className="text-[11px] text-indigo-600 mt-2 font-semibold">클릭해서 크게 보기</p>
+                  </div>
+                </button>
+              ))}
             </div>
           </section>
 
@@ -144,6 +205,33 @@ export default function PartnersPage() {
           </section>
         </div>
       </section>
+
+      {selectedPreview && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${selectedPreview.title} 확대 보기`}
+          className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setSelectedPreview(null)}
+        >
+          <div
+            className="w-full max-w-6xl bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+              <p className="text-sm font-semibold text-slate-900">{selectedPreview.title}</p>
+              <button
+                type="button"
+                onClick={() => setSelectedPreview(null)}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                닫기
+              </button>
+            </div>
+            <img src={selectedPreview.src} alt={selectedPreview.title} className="w-full h-auto max-h-[80vh] object-contain bg-slate-100" />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

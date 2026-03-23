@@ -474,6 +474,9 @@ function buildWireframeHtml() {
   const line = 'rgba(148,163,184,0.22)'
   const nodeBorder = 'rgba(148,163,184,0.22)'
   const labelColor = 'rgba(226,232,240,0.95)'
+  const labelBg = '#e2e8f0'
+  const labelTitleColor = '#0f172a'
+  const labelDescColor = '#334155'
 
   const w = 1920
   const h = 1320
@@ -514,9 +517,9 @@ function buildWireframeHtml() {
     svg { position:absolute; left:0; top:0; width:${w}px; height:${h}px; pointer-events:none; }
     .node { position:absolute; border:2px solid ${nodeBorder}; border-radius:14px; background:rgba(2,6,23,0.70); box-shadow: 0 10px 30px rgba(0,0,0,0.35); overflow:hidden; }
     .thumb { width:100%; height:calc(100% - 46px); object-fit:cover; filter: grayscale(1) contrast(1.05); opacity:0.95; }
-    .label { position:absolute; left:0; bottom:0; right:0; height:46px; display:flex; flex-direction:column; justify-content:center; padding:6px 10px 4px; font-family: Arial, Helvetica, sans-serif; color:${labelColor}; background: rgba(2,6,23,0.62); border-top:1px solid rgba(148,163,184,0.16); overflow:hidden; }
-    .labelTitle { font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .labelDesc { margin-top:2px; font-size:10.5px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .label { position:absolute; left:0; bottom:0; right:0; height:46px; display:flex; flex-direction:column; justify-content:center; padding:6px 10px 4px; font-family: Arial, Helvetica, sans-serif; color:${labelColor}; background: ${labelBg}; border-top:1px solid rgba(2,6,23,0.22); overflow:hidden; }
+    .labelTitle { font-size:12px; font-weight:700; color:${labelTitleColor}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .labelDesc { margin-top:2px; font-size:10.5px; color:${labelDescColor}; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   </style>
 </head>
 <body>
