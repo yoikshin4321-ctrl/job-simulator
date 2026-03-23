@@ -23,7 +23,7 @@ export default function AboutPage() {
               직무 리허설을 통한 <span className="text-indigo-600">실무 역량 인증</span>
             </h1>
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-3xl">
-              자빅스(JOB-EX)는 실제 기업의 업무 맥락을 반영한 실전 직무 리허설 과제를 통해,
+              자빅스(JOB-EX)는 실제 기관의 업무 맥락을 반영한 실전 직무 리허설 과제를 통해,
               학생과 예비 직장인의 직무 수행 능력을 객관적으로 측정하고 인증하는
               마이크로크리덴셜 플랫폼입니다. 단순한 문제 풀이를 넘어, 실제 실무에
               가장 가까운 &quot;리허설&quot; 경험을 제공합니다.
@@ -34,7 +34,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             <div className="bg-[#F9FAFB] rounded-2xl border border-slate-200 p-6">
               <h2 className="text-sm font-semibold text-indigo-600 uppercase tracking-widest mb-2">
-                Our Mission
+                우리의 미션
               </h2>
               <p className="text-sm sm:text-base text-slate-700 leading-relaxed">
                 자빅스(JOB-EX)의 미션은{' '}
@@ -42,20 +42,20 @@ export default function AboutPage() {
                   학습 · 평가 · 인증 · 기회를 하나의 여정으로 연결
                 </span>
                 하여, 누구나 자신의 직무 역량을 증명하고 성장할 수 있도록 돕는
-                것입니다. 대학과 기업, 그리고 학습자가 함께 신뢰할 수 있는
+                것입니다. 대학과 기관, 그리고 학습자가 함께 신뢰할 수 있는
                 실무 역량 인증 기준을 만들어 갑니다.
               </p>
             </div>
             <div className="bg-[#F9FAFB] rounded-2xl border border-slate-200 p-6">
               <h2 className="text-sm font-semibold text-indigo-600 uppercase tracking-widest mb-2">
-                For Universities & Companies
+                대학·기관을 위한
               </h2>
               <p className="text-sm sm:text-base text-slate-700 leading-relaxed">
-                자빅스(JOB-EX)는 대학과 기업을 위한{' '}
+                자빅스(JOB-EX)는 대학과 기관을 위한{' '}
                 <span className="font-semibold">마이크로크리덴셜 플랫폼</span>으로,
                 교육 과정에 실무 시뮬레이션을 도입하고, 결과 데이터를 기반으로
-                학생의 역량을 정교하게 진단할 수 있게 합니다. 기업은 검증된
-                역량 데이터를 바탕으로 보다 정교한 채용·인턴십 매칭을 진행할 수
+                학생의 역량을 정교하게 진단할 수 있게 합니다. 기관은 검증된
+                역량 데이터를 바탕으로 보다 정교한 진로·후속 연계 운영을 진행할 수
                 있습니다.
               </p>
             </div>
@@ -91,8 +91,8 @@ export default function AboutPage() {
                   03 · 학습-평가-인증-연계
                 </p>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  교과/비교과 수업, 비교과 프로그램, 기업 연계 프로젝트 등과
-                  연동하여, 학습-평가-인증-기회(인턴십·채용)를 자연스럽게
+                  교과/비교과 수업, 비교과 프로그램, 기관 연계 프로젝트 등과
+                  연동하여, 학습-평가-인증-기회(후속 연계·상담)를 자연스럽게
                   이어줍니다.
                 </p>
               </div>
@@ -103,7 +103,7 @@ export default function AboutPage() {
           <div className="pt-8 mt-4 border-t border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">
-                Ready to Start
+                지금 시작하기
               </p>
               <p className="text-sm sm:text-base text-slate-700">
                 우리 대학/조직에 자빅스(JOB-EX)를 도입하고 싶다면, 데모를 신청해 보세요.

@@ -80,7 +80,7 @@ export default function NavBar() {
               시뮬레이션
             </Link>
             <Link to="/about" className={linkClass('/about')}>
-              대학/기업용 서비스
+              대학/기관용 서비스
             </Link>
           </nav>
         </div>

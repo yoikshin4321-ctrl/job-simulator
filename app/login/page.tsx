@@ -7,6 +7,7 @@ import { notifyAuthStorageUpdated } from '../../src/lib/authEvents'
 import { requestNavAuthRefresh } from '../../src/lib/navAuthSync'
 import { isLikelyDeployedHostname, supabase } from '../../src/lib/supabaseClient'
 import { formatSupabaseLikeError, getProfileByUserId, upsertProfile } from '../../src/lib/supabaseDb'
+import { getInstitutionByAdmin } from '../../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
@@ -88,13 +89,19 @@ export default function LoginPage() {
           if (!prof) throw new Error('프로필 정보를 불러오지 못했습니다.')
 
           // 기존 UI 호환을 위해 localStorage에도 동일 shape로 저장 (안전: 삭제하지 않음)
+          const inst =
+            prof.role === 'institution_admin' ? await getInstitutionByAdmin(userId) : null
           const next = {
             users: [],
             institutions: [],
             currentUser: prof.role === 'student' ? { email: email.trim(), name: prof.name } : null,
             currentInstitution:
               prof.role === 'institution_admin'
-                ? { adminEmail: email.trim(), institutionName: '기관', institutionCode: '' }
+                ? {
+                    adminEmail: email.trim(),
+                    institutionName: inst?.institution_name || '기관',
+                    institutionCode: inst?.institution_code || '',
+                  }
                 : null,
           } as any
 

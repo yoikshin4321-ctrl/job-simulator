@@ -211,7 +211,7 @@ export default function InstitutionSignupPage() {
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 sm:p-8 flex flex-col lg:flex-row gap-8">
         <div className="lg:w-[40%] lg:border-r lg:pr-6">
           <p className="text-xs font-semibold text-indigo-600 uppercase tracking-widest mb-3">기관용</p>
-          <h1 className="text-xl font-bold text-slate-900 mb-2">대학/기업용 서비스 도입 문의 관리</h1>
+          <h1 className="text-xl font-bold text-slate-900 mb-2">대학/기관용 서비스 도입 문의 관리</h1>
           <p className="text-sm text-slate-500 leading-relaxed">
             기관 계약 후, 학생/취준생의 시뮬레이션 데이터를 통계로 확인할 수 있습니다.
           </p>

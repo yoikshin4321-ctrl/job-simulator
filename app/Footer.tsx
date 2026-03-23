@@ -31,7 +31,7 @@ export default function Footer() {
                 회사소개
               </Link>
               <Link href="/partners" className={linkClass}>
-                대학/기업용 서비스
+                대학/기관용 서비스
               </Link>
               <a href="#" className={linkClass}>
                 공지사항

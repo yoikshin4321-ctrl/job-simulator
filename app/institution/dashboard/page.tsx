@@ -505,6 +505,18 @@ export default function InstitutionDashboardPage() {
             >
               시뮬레이션 화면 보기
             </Link>
+            <Link
+              href="/institution/counseling-guides"
+              className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              상담 가이드
+            </Link>
+            <Link
+              href="/institution/students"
+              className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              학생 현황
+            </Link>
           </div>
         </div>
 

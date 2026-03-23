@@ -7,14 +7,14 @@ import { Menu, X } from 'lucide-react'
 import { JOB_SIM_AUTH_UPDATED_EVENT, notifyAuthStorageUpdated } from '../src/lib/authEvents'
 import { subscribeNavAuthRefresh } from '../src/lib/navAuthSync'
 import { supabase } from '../src/lib/supabaseClient'
-import { getInstitutionByAdmin, getProfileByUserId } from '../src/lib/supabaseDb'
+import { getInstitutionByAdmin, getInstitutionByCode, getProfileByUserId } from '../src/lib/supabaseDb'
 
 const AUTH_KEY = 'job_sim_auth'
 
 const NAV_ITEMS = [
   { href: '/explore', label: '직업 탐색', match: '/explore' as const },
   { href: '/simulation', label: '시뮬레이션', match: '/simulation' as const },
-  { href: '/partners', label: '대학/기업용 서비스', match: '/partners' as const },
+  { href: '/partners', label: '대학/기관용 서비스', match: '/partners' as const },
 ] as const
 
 function applyAuthFromLocalStorage(): { user: any; institution: any } | null {
@@ -60,6 +60,56 @@ export default function NavBar() {
   useEffect(() => {
     setMenuOpen(false)
   }, [pathname])
+
+  // institutionName이 기본값('기관')으로만 들어오는 경우가 있어,
+  // institutionCode를 기반으로 실제 소속명을 보강해서 헤더 표기를 고정합니다.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!currentInstitution) return
+
+    const code = currentInstitution.institutionCode ?? currentInstitution.institution_code
+    const name = currentInstitution.institutionName ?? currentInstitution.institution_name
+
+    if (!code || typeof code !== 'string') return
+    if (typeof name === 'string' && name.trim().length > 0 && name.trim() !== '기관') return
+
+    // 1) Supabase 우선
+    if (supabase) {
+      void (async () => {
+        try {
+          const inst = await getInstitutionByCode(code)
+          if (!inst) return
+          setCurrentInstitution((prev: any) => ({
+            ...(prev || {}),
+            institutionName: inst.institution_name,
+            institutionCode: inst.institution_code,
+          }))
+        } catch {
+          // ignore
+        }
+      })()
+      return
+    }
+
+    // 2) Supabase 미설정이면 localStorage의 institutions 배열로 매칭
+    try {
+      const raw = window.localStorage.getItem(AUTH_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      const institutions = parsed?.institutions || []
+      const found = institutions.find(
+        (ins: any) => ins.institutionCode === code || ins.institution_code === code,
+      )
+      if (!found) return
+      setCurrentInstitution((prev: any) => ({
+        ...(prev || {}),
+        institutionName: found.institutionName || found.institution_name || prev?.institutionName,
+        institutionCode: found.institutionCode || found.institution_code || prev?.institutionCode,
+      }))
+    } catch {
+      // ignore
+    }
+  }, [currentInstitution, supabase])
 
   // 로그인/가입 후 router.replace로 경로만 바뀌는 경우, 번들 분리로 requestNavAuthRefresh가
   // 빈 Set을 호출할 수 있어 여기서 localStorage와 헤더 상태를 다시 맞춤
@@ -124,12 +174,21 @@ export default function NavBar() {
                 }
 
                 if (prof.role === 'institution_admin') {
-                  const inst = await getInstitutionByAdmin(session.user.id)
+                  // admin_id 기반 조회가 실패하는 경우가 있어 institution_code로 먼저 조회합니다.
+                  const instCode = (prof as any).institution_code || (prof as any).institutionCode || ''
+                  let inst = null
+                  if (instCode) {
+                    inst = await getInstitutionByCode(instCode)
+                  }
+                  if (!inst) {
+                    inst = await getInstitutionByAdmin(session.user.id)
+                  }
+
                   if (gen !== readAuthGenRef.current) return
                   setCurrentInstitution(
                     inst
                       ? { institutionName: inst.institution_name, institutionCode: inst.institution_code }
-                      : { institutionName: '기관', institutionCode: '' },
+                      : { institutionName: '기관', institutionCode: instCode || '' },
                   )
                   setCurrentUser(null)
                 } else {

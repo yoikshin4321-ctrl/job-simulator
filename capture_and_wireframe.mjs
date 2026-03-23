@@ -336,6 +336,12 @@ const pagesToCapture = [
   { key: 'mvp-demo', urlPath: '/mvp-demo', state: 'student' },
   { key: 'simulation-index', urlPath: '/simulation', state: 'student' },
 
+  // Student modules (new)
+  { key: 'career-test', urlPath: '/career-test', state: 'student' },
+  { key: 'mentor', urlPath: '/mentor', state: 'student' },
+  { key: 'pick', urlPath: '/pick', state: 'student' },
+  { key: 'vod', urlPath: '/vod', state: 'student' },
+
   // Simulation dynamic routes
   { key: 'simulation-pm', urlPath: '/simulation/pm', state: 'student' },
   { key: 'simulation-da', urlPath: '/simulation/da', state: 'student' },
@@ -361,6 +367,9 @@ const pagesToCapture = [
   { key: 'institution-signup', urlPath: '/institution-signup', state: 'guest' },
   { key: 'institution-login', urlPath: '/institution-login', state: 'guest' },
   { key: 'institution-dashboard', urlPath: '/institution/dashboard', state: 'institution' },
+  // Institution pages (new)
+  { key: 'institution-counseling-guides', urlPath: '/institution/counseling-guides', state: 'institution' },
+  { key: 'institution-students', urlPath: '/institution/students', state: 'institution' },
 ]
 
 const getSeed = (state) => {
@@ -370,31 +379,39 @@ const getSeed = (state) => {
 }
 
 const nodeLayout = {
-  home: { x: 220, y: 500, w: 260, h: 150, label: 'Home /' },
-  'simulation-index': { x: 560, y: 380, w: 260, h: 150, label: '/simulation' },
-  about: { x: 560, y: 560, w: 260, h: 150, label: '/about' },
-  explore: { x: 560, y: 740, w: 260, h: 150, label: '/explore' },
+  home: { x: 220, y: 500, w: 260, h: 150, label: '홈', desc: '서비스 소개 및 주요 진입점' },
+  'simulation-index': { x: 560, y: 380, w: 260, h: 150, label: '시뮬레이션', desc: '직무 리허설 실행' },
+  about: { x: 560, y: 560, w: 260, h: 150, label: '소개', desc: '대학/기관용 서비스 소개' },
+  explore: { x: 560, y: 740, w: 260, h: 150, label: '직업 탐색', desc: '직무/분야 기반 탐색' },
 
-  'simulation-pm': { x: 880, y: 270, w: 260, h: 150, label: '/simulation/pm' },
-  'simulation-da': { x: 1180, y: 270, w: 260, h: 150, label: '/simulation/da' },
-  'simulation-marketer': { x: 880, y: 450, w: 260, h: 150, label: '/simulation/marketer' },
-  result: { x: 1180, y: 450, w: 260, h: 150, label: '/result' },
-  report: { x: 1450, y: 450, w: 260, h: 150, label: '/report' },
+  // Student modules (new)
+  pick: { x: 220, y: 740, w: 260, h: 150, label: 'Pick 열람', desc: '기관 추천 자료 확인' },
+  'career-test': { x: 880, y: 900, w: 260, h: 150, label: 'AI 진로검사', desc: '검사 실행 및 리포트 다운로드' },
+  mentor: { x: 1180, y: 900, w: 260, h: 150, label: '멘토 질문', desc: '질문 작성 및 답변 확인' },
+  vod: { x: 1450, y: 900, w: 260, h: 150, label: 'VOD 시청', desc: '시청 시간 기록' },
 
-  partners: { x: 880, y: 740, w: 260, h: 150, label: '/partners' },
-  'mvp-demo': { x: 1180, y: 740, w: 260, h: 150, label: '/mvp-demo' },
+  'simulation-pm': { x: 880, y: 270, w: 260, h: 150, label: '시뮬레이션(PM)', desc: 'PM 직무 리허설' },
+  'simulation-da': { x: 1180, y: 270, w: 260, h: 150, label: '시뮬레이션(DA)', desc: '데이터 분석 리허설' },
+  'simulation-marketer': { x: 880, y: 450, w: 260, h: 150, label: '시뮬레이션(마케터)', desc: '마케팅 직무 리허설' },
+  result: { x: 1180, y: 450, w: 260, h: 150, label: '결과', desc: '준비도/점수 요약' },
+  report: { x: 1450, y: 450, w: 260, h: 150, label: '리포트', desc: '맞춤 피드백 및 제안' },
 
-  login: { x: 220, y: 710, w: 260, h: 150, label: '/login' },
-  signup: { x: 220, y: 860, w: 260, h: 150, label: '/signup' },
-  my: { x: 560, y: 900, w: 260, h: 150, label: '/my' },
+  partners: { x: 880, y: 740, w: 260, h: 150, label: '제휴', desc: '대학/기관 파트너 소개' },
+  'mvp-demo': { x: 1180, y: 740, w: 260, h: 150, label: '데모', desc: '대시보드 프리뷰' },
 
-  terms: { x: 220, y: 260, w: 260, h: 150, label: '/terms' },
-  privacy: { x: 220, y: 320, w: 260, h: 150, label: '/privacy' },
+  login: { x: 220, y: 710, w: 260, h: 150, label: '로그인', desc: '학생 로그인' },
+  signup: { x: 220, y: 860, w: 260, h: 150, label: '회원가입', desc: '학생 회원가입' },
+  my: { x: 560, y: 900, w: 260, h: 150, label: '내 정보', desc: '관심사 및 기록 관리' },
 
-  'institution-verify': { x: 880, y: 630, w: 260, h: 150, label: '/institution-verify' },
-  'institution-signup': { x: 1450, y: 260, w: 260, h: 150, label: '/institution-signup' },
-  'institution-login': { x: 1450, y: 410, w: 260, h: 150, label: '/institution-login' },
-  'institution-dashboard': { x: 1450, y: 630, w: 260, h: 150, label: '/institution/dashboard' },
+  terms: { x: 220, y: 260, w: 260, h: 150, label: '이용약관', desc: '서비스 약관' },
+  privacy: { x: 220, y: 320, w: 260, h: 150, label: '개인정보', desc: '개인정보 처리' },
+
+  'institution-verify': { x: 880, y: 630, w: 260, h: 150, label: '기관 인증', desc: '학생 기관 코드 확인' },
+  'institution-signup': { x: 1450, y: 260, w: 260, h: 150, label: '기관 가입', desc: '기관 담당자 계정 생성' },
+  'institution-login': { x: 1450, y: 410, w: 260, h: 150, label: '기관 로그인', desc: '기관 관리자 로그인' },
+  'institution-dashboard': { x: 1450, y: 630, w: 260, h: 150, label: '기관 대시보드', desc: '학생 활동 집계 및 다운로드' },
+  'institution-counseling-guides': { x: 1180, y: 1050, w: 260, h: 150, label: '상담 가이드', desc: '상담 운영 템플릿 & 우선순위 안내' },
+  'institution-students': { x: 1450, y: 1050, w: 260, h: 150, label: '학생 현황', desc: '학생별 이력/준비도/최근 활동 확인' },
 }
 
 const edges = [
@@ -418,12 +435,20 @@ const edges = [
 
   ['login', 'signup'],
   ['signup', 'my'],
+  // student modules from my
+  ['my', 'career-test'],
+  ['my', 'mentor'],
+  ['my', 'pick'],
+  ['my', 'vod'],
   ['my', 'institution-verify'],
 
   ['institution-verify', 'institution-dashboard'],
   ['home', 'institution-signup'],
   ['institution-signup', 'institution-login'],
   ['institution-login', 'institution-dashboard'],
+  // institution internal navigation
+  ['institution-dashboard', 'institution-counseling-guides'],
+  ['institution-dashboard', 'institution-students'],
 ]
 
 function nodeCenter(node) {
@@ -445,13 +470,13 @@ function edgePath(fromKey, toKey) {
 }
 
 function buildWireframeHtml() {
-  const bg = '#0b1220'
-  const line = 'rgba(148,163,184,0.65)'
-  const nodeBorder = 'rgba(226,232,240,0.55)'
-  const labelColor = 'rgba(226,232,240,0.85)'
+  const bg = '#000000'
+  const line = 'rgba(148,163,184,0.22)'
+  const nodeBorder = 'rgba(148,163,184,0.22)'
+  const labelColor = 'rgba(226,232,240,0.95)'
 
   const w = 1920
-  const h = 1080
+  const h = 1320
   const nodeKeys = Object.keys(nodeLayout)
 
   const linesSvg = edges
@@ -469,7 +494,10 @@ function buildWireframeHtml() {
       return `
       <div class="node" style="left:${n.x}px; top:${n.y}px; width:${n.w}px; height:${n.h}px;">
         <img class="thumb" src="${imgPath}" alt="${n.label}" />
-        <div class="label">${n.label}</div>
+        <div class="label">
+          <div class="labelTitle">${n.label}</div>
+          ${n.desc ? `<div class="labelDesc">${n.desc}</div>` : ''}
+        </div>
       </div>`
     })
     .join('\n')
@@ -484,9 +512,11 @@ function buildWireframeHtml() {
     html, body { margin:0; padding:0; width:${w}px; height:${h}px; background:${bg}; overflow:hidden; }
     .wrap { position:relative; width:${w}px; height:${h}px; background:${bg}; }
     svg { position:absolute; left:0; top:0; width:${w}px; height:${h}px; pointer-events:none; }
-    .node { position:absolute; border:2px solid ${nodeBorder}; border-radius:14px; background:rgba(255,255,255,0.03); box-shadow: 0 10px 30px rgba(0,0,0,0.35); overflow:hidden; }
-    .thumb { width:100%; height:calc(100% - 26px); object-fit:cover; filter: grayscale(1) contrast(1.1) brightness(1.05); opacity:0.95; }
-    .label { position:absolute; left:0; bottom:0; right:0; height:26px; display:flex; align-items:center; padding:0 10px; font-family: Arial, Helvetica, sans-serif; font-size:12px; color:${labelColor}; background: rgba(2,6,23,0.75); border-top:1px solid rgba(226,232,240,0.25); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .node { position:absolute; border:2px solid ${nodeBorder}; border-radius:14px; background:rgba(2,6,23,0.70); box-shadow: 0 10px 30px rgba(0,0,0,0.35); overflow:hidden; }
+    .thumb { width:100%; height:calc(100% - 46px); object-fit:cover; filter: grayscale(1) contrast(1.05); opacity:0.95; }
+    .label { position:absolute; left:0; bottom:0; right:0; height:46px; display:flex; flex-direction:column; justify-content:center; padding:6px 10px 4px; font-family: Arial, Helvetica, sans-serif; color:${labelColor}; background: rgba(2,6,23,0.62); border-top:1px solid rgba(148,163,184,0.16); overflow:hidden; }
+    .labelTitle { font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .labelDesc { margin-top:2px; font-size:10.5px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   </style>
 </head>
 <body>
@@ -506,7 +536,7 @@ async function composeScreenshot() {
   fs.writeFileSync(htmlPath, html, 'utf8')
 
   const browser = await chromium.launch({ headless: true })
-  const context = await browser.newContext({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 })
+  const context = await browser.newContext({ viewport: { width: 1920, height: 1320 }, deviceScaleFactor: 1 })
   const page = await context.newPage()
 
   const fileUrl = `file://${htmlPath}`
@@ -522,19 +552,22 @@ async function composeScreenshot() {
 }
 
 async function main() {
-  // 1) Capture screenshots
-  const browser = await chromium.launch({ headless: true })
-  const context = await browser.newContext({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 })
+  // 1) Capture screenshots (OPTIONAL)
+  // 이미 shots/*.png가 있다면 ONLY_COMPOSE=1로 wireframe만 다시 조합합니다.
+  if (process.env.ONLY_COMPOSE !== '1') {
+    const browser = await chromium.launch({ headless: true })
+    const context = await browser.newContext({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 })
 
-  for (const p of pagesToCapture) {
-    const seed = getSeed(p.state)
-    const url = `${baseUrl}${p.urlPath}`
-    console.log(`Capturing ${p.key} -> ${url}`)
-    await captureOne({ context, url, key: p.key, seed })
+    for (const p of pagesToCapture) {
+      const seed = getSeed(p.state)
+      const url = `${baseUrl}${p.urlPath}`
+      console.log(`Capturing ${p.key} -> ${url}`)
+      await captureOne({ context, url, key: p.key, seed })
+    }
+
+    await context.close()
+    await browser.close()
   }
-
-  await context.close()
-  await browser.close()
 
   // 2) Compose wireframe into a single image
   await composeScreenshot()
