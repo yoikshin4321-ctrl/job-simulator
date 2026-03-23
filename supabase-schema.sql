@@ -151,3 +151,41 @@ for select using (
   )
 );
 
+-- ------------------------------------------------------------
+-- Institution Activity Events (AI 진로검사 / 멘토 질문 / Pick / VOD 등)
+-- ------------------------------------------------------------
+-- 공통 이벤트 테이블: 학생 모듈 사용 기록을 기관 코드 기준으로 집계하기 위함
+create table if not exists public.institution_activity_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  institution_code text not null,
+  student_email text not null default '',
+  student_name text not null default '',
+
+  event_type text not null,
+  occurred_at timestamptz not null default now(),
+
+  duration_seconds int,
+  meta_json jsonb not null default '{}'::jsonb
+);
+
+alter table public.institution_activity_events enable row level security;
+
+-- 학생(본인)은 자신이 남긴 이벤트만 insert/select
+create policy "activity_insert_own" on public.institution_activity_events
+for insert with check (auth.uid() = user_id);
+
+create policy "activity_select_own" on public.institution_activity_events
+for select using (auth.uid() = user_id);
+
+-- 기관 담당자는 자신 기관 코드에 해당하는 이벤트를 조회
+create policy "activity_select_institution_admin" on public.institution_activity_events
+for select using (
+  exists (
+    select 1
+    from public.institutions i
+    where i.admin_id = auth.uid()
+      and i.institution_code = institution_activity_events.institution_code
+  )
+);
+

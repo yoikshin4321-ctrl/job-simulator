@@ -315,6 +315,46 @@ export default function MyPage() {
               </Link>
             </div>
           </div>
+
+        {/* 학생용 모듈入口 */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900 mb-2">학습/상담 모듈</h2>
+          <p className="text-sm text-slate-600 mb-5">기관 대시보드에서 활동이 집계됩니다.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Link
+              href="/career-test"
+              className="text-left bg-slate-50 hover:bg-white transition-colors border border-slate-200 rounded-2xl p-4"
+            >
+              <div className="text-sm font-semibold text-slate-900">AI 진로검사</div>
+              <div className="text-xs text-slate-500 mt-1">검사 진행/리포트 다운로드</div>
+            </Link>
+
+            <Link
+              href="/mentor"
+              className="text-left bg-slate-50 hover:bg-white transition-colors border border-slate-200 rounded-2xl p-4"
+            >
+              <div className="text-sm font-semibold text-slate-900">멘토 질문</div>
+              <div className="text-xs text-slate-500 mt-1">질문/답변 여부 집계</div>
+            </Link>
+
+            <Link
+              href="/pick"
+              className="text-left bg-slate-50 hover:bg-white transition-colors border border-slate-200 rounded-2xl p-4"
+            >
+              <div className="text-sm font-semibold text-slate-900">Pick 열람</div>
+              <div className="text-xs text-slate-500 mt-1">열람 기록</div>
+            </Link>
+
+            <Link
+              href="/vod"
+              className="text-left bg-slate-50 hover:bg-white transition-colors border border-slate-200 rounded-2xl p-4"
+            >
+              <div className="text-sm font-semibold text-slate-900">VOD</div>
+              <div className="text-xs text-slate-500 mt-1">시청 시간 기록</div>
+            </Link>
+          </div>
+        </div>
         </div>
       </div>
     </div>

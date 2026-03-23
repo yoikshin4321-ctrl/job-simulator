@@ -289,3 +289,60 @@ export async function updateStudentInterests(payload: { userId: string; interest
   return { ok: true }
 }
 
+export async function insertFeatureActivityEvent(payload: {
+  userId: string
+  institutionCode: string
+  studentEmail: string
+  studentName: string
+  eventType: string
+  occurredAt: string
+  durationSeconds?: number
+  meta: Record<string, any>
+}) {
+  if (!supabase) return { ok: false, error: new Error('Supabase not configured') }
+  const { error } = await supabase.from('institution_activity_events').insert({
+    user_id: payload.userId,
+    institution_code: payload.institutionCode,
+    student_email: payload.studentEmail,
+    student_name: payload.studentName,
+    event_type: payload.eventType,
+    occurred_at: payload.occurredAt,
+    duration_seconds: payload.durationSeconds ?? null,
+    meta_json: payload.meta,
+  })
+  if (error) return { ok: false, error }
+  return { ok: true }
+}
+
+export async function fetchFeatureActivityEventsForInstitution(payload: {
+  institutionCode: string
+  sinceIso?: string
+}) {
+  if (!supabase) return []
+
+  let query = supabase
+    .from('institution_activity_events')
+    .select('*')
+    .eq('institution_code', payload.institutionCode)
+    .order('occurred_at', { ascending: false })
+
+  if (payload.sinceIso) {
+    query = query.gte('occurred_at', payload.sinceIso)
+  }
+
+  const { data, error } = await query.limit(5000)
+  if (error) return []
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    userId: row.user_id,
+    institutionCode: row.institution_code,
+    studentEmail: row.student_email,
+    studentName: row.student_name,
+    eventType: row.event_type,
+    occurredAt: row.occurred_at,
+    durationSeconds: row.duration_seconds,
+    meta: row.meta_json,
+  }))
+}
+

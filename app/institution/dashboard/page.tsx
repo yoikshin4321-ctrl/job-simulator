@@ -4,10 +4,17 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Award, BarChart3, Briefcase, Users } from 'lucide-react'
 import { supabase } from '../../../src/lib/supabaseClient'
-import { fetchStepResultsForInstitution, getInstitutionByAdmin, getSupabaseUserId } from '../../../src/lib/supabaseDb'
+import {
+  fetchFeatureActivityEventsForInstitution,
+  fetchStepResultsForInstitution,
+  getInstitutionByAdmin,
+  getSupabaseUserId,
+} from '../../../src/lib/supabaseDb'
+import { loadLocalFeatureEventsForInstitution } from '../../../src/lib/featureActivity'
 
 const AUTH_KEY = 'job_sim_auth'
 const HISTORY_KEY = 'job_sim_ai_history'
+// 학생 모듈(진로검사/멘토/픽/VOD) 활동 이벤트
 
 const TRAIT_KEYS = ['문제해결력', '커뮤니케이션', '직무이해력', '완수율', '전문지식'] as const
 
@@ -25,6 +32,19 @@ type HistoryEntry = {
   studentName?: string
   institutionCode?: string
   runId?: string
+}
+
+type FeatureEventType = 'career_test_completed' | 'mentor_question_submitted' | 'pick_viewed' | 'vod_watched_completed'
+type FeatureEvent = {
+  id?: string
+  userId?: string
+  institutionCode?: string
+  studentEmail: string
+  studentName: string
+  eventType: FeatureEventType | string
+  occurredAt: string
+  durationSeconds?: number
+  meta?: Record<string, any>
 }
 
 function safeParseJson(raw: string | null): any {
@@ -49,9 +69,33 @@ export default function InstitutionDashboardPage() {
   }>(null)
   const [histories, setHistories] = useState<HistoryEntry[]>([])
   const [selectedStudentEmail, setSelectedStudentEmail] = useState<string>('')
+  const [featureEvents, setFeatureEvents] = useState<FeatureEvent[]>([])
+  const [featureLoading, setFeatureLoading] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+
+    const loadFeatureEvents = async (institutionCode: string) => {
+      setFeatureLoading(true)
+      const localEvents = loadLocalFeatureEventsForInstitution(institutionCode) as FeatureEvent[]
+
+      // Supabase 우선, 실패 시 localStorage fallback
+      if (supabase) {
+        try {
+          const rows = (await fetchFeatureActivityEventsForInstitution({ institutionCode })) as FeatureEvent[]
+          // Supabase가 비어있어도 로컬에 값이 있다면 보여주기 위함
+          setFeatureEvents(rows.length ? rows : localEvents)
+        } catch {
+          setFeatureEvents(localEvents)
+        } finally {
+          setFeatureLoading(false)
+        }
+        return
+      }
+
+      setFeatureEvents(localEvents)
+      setFeatureLoading(false)
+    }
 
     // 1) Supabase 우선 로딩 (멀티디바이스 대응)
     if (supabase) {
@@ -70,6 +114,8 @@ export default function InstitutionDashboardPage() {
 
         const rows = await fetchStepResultsForInstitution({ institutionCode: inst.institution_code })
         setHistories(rows as any)
+
+        void loadFeatureEvents(inst.institution_code)
       })().catch(() => {
         // ignore: fallback은 아래 localStorage 코드로 처리
       })
@@ -88,7 +134,35 @@ export default function InstitutionDashboardPage() {
     const historyRaw = window.localStorage.getItem(HISTORY_KEY)
     const parsedHistory: HistoryEntry[] = safeParseJson(historyRaw) || []
     setHistories(parsedHistory)
+
+    const currentInstitutionCode = currentInstitution?.institutionCode || ''
+    if (currentInstitutionCode) void loadFeatureEvents(currentInstitutionCode)
   }, [])
+
+  // 로컬 이벤트 기반 “실시간” 갱신 (학생 모듈에서 localStorage에 즉시 기록되기 때문)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const code = institution?.institutionCode
+    if (!code) return
+
+    const id = window.setInterval(() => {
+      void (async () => {
+        if (supabase) {
+          try {
+            const rows = (await fetchFeatureActivityEventsForInstitution({ institutionCode: code })) as FeatureEvent[]
+            setFeatureEvents(rows)
+            return
+          } catch {
+            // fallthrough -> local
+          }
+        }
+        const localEvents = loadLocalFeatureEventsForInstitution(code) as FeatureEvent[]
+        setFeatureEvents(localEvents)
+      })()
+    }, 20000)
+
+    return () => window.clearInterval(id)
+  }, [institution?.institutionCode])
 
   const myHistories = useMemo(() => {
     if (!institution?.institutionCode) return []
@@ -101,6 +175,143 @@ export default function InstitutionDashboardPage() {
       .filter((h) => (h.studentEmail || '') === selectedStudentEmail)
       .sort((a, b) => (b.analyzedAt || '').localeCompare(a.analyzedAt || ''))
   }, [myHistories, selectedStudentEmail])
+
+  const featureTotals = useMemo(() => {
+    const totals = {
+      careerTestCount: 0,
+      mentorQuestionCount: 0,
+      mentorAnsweredCount: 0,
+      pickViewedCount: 0,
+      vodWatchedCount: 0,
+      vodWatchSeconds: 0,
+    }
+
+    featureEvents.forEach((e) => {
+      if (e.eventType === 'career_test_completed') totals.careerTestCount += 1
+      if (e.eventType === 'mentor_question_submitted') {
+        totals.mentorQuestionCount += 1
+        if (e.meta?.answered === true) totals.mentorAnsweredCount += 1
+      }
+      if (e.eventType === 'pick_viewed') totals.pickViewedCount += 1
+      if (e.eventType === 'vod_watched_completed') {
+        totals.vodWatchedCount += 1
+        totals.vodWatchSeconds += Number(e.durationSeconds || 0)
+      }
+    })
+
+    return totals
+  }, [featureEvents])
+
+  const selectedStudentFeatureEvents = useMemo(() => {
+    if (!selectedStudentEmail) return []
+    return featureEvents
+      .filter((e) => (e.studentEmail || '') === selectedStudentEmail)
+      .sort((a, b) => (b.occurredAt || '').localeCompare(a.occurredAt || ''))
+  }, [featureEvents, selectedStudentEmail])
+
+  const downloadCsv = (filename: string, rows: Record<string, any>[]) => {
+    const headers = Object.keys(rows[0] || {})
+    const escape = (v: any) => {
+      const s = v == null ? '' : String(v)
+      // CSV 규격: 따옴표 포함/콤마 포함이면 감싸기
+      if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`
+      return s
+    }
+    const csv = [headers.join(','), ...rows.map((r) => headers.map((h) => escape(r[h])).join(','))].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportStudentSummaryCsv = () => {
+    if (!featureEvents.length) return
+    const map = new Map<
+      string,
+      {
+        studentEmail: string
+        studentName: string
+        careerTestCount: number
+        mentorQuestionCount: number
+        mentorAnsweredCount: number
+        pickViewedCount: number
+        vodWatchedCount: number
+        vodWatchSeconds: number
+      }
+    >()
+
+    featureEvents.forEach((e) => {
+      const key = e.studentEmail
+      if (!map.has(key)) {
+        map.set(key, {
+          studentEmail: e.studentEmail,
+          studentName: e.studentName,
+          careerTestCount: 0,
+          mentorQuestionCount: 0,
+          mentorAnsweredCount: 0,
+          pickViewedCount: 0,
+          vodWatchedCount: 0,
+          vodWatchSeconds: 0,
+        })
+      }
+      const s = map.get(key)!
+      if (e.eventType === 'career_test_completed') s.careerTestCount += 1
+      if (e.eventType === 'mentor_question_submitted') {
+        s.mentorQuestionCount += 1
+        if (e.meta?.answered === true) s.mentorAnsweredCount += 1
+      }
+      if (e.eventType === 'pick_viewed') s.pickViewedCount += 1
+      if (e.eventType === 'vod_watched_completed') {
+        s.vodWatchedCount += 1
+        s.vodWatchSeconds += Number(e.durationSeconds || 0)
+      }
+    })
+
+    const rows = Array.from(map.values()).sort((a, b) => b.vodWatchSeconds - a.vodWatchSeconds)
+    downloadCsv(`institution-student-activity-${institution?.institutionCode || 'unknown'}.csv`, rows)
+  }
+
+  const exportMonthlySummaryCsv = () => {
+    if (!featureEvents.length) return
+    const map = new Map<string, any>()
+
+    const monthKey = (iso: string) => (iso || '').slice(0, 7) // YYYY-MM
+
+    featureEvents.forEach((e) => {
+      const m = monthKey(e.occurredAt)
+      const key = `${m}|${e.studentEmail}`
+      if (!map.has(key)) {
+        map.set(key, {
+          month: m,
+          studentEmail: e.studentEmail,
+          studentName: e.studentName,
+          careerTestCount: 0,
+          mentorQuestionCount: 0,
+          mentorAnsweredCount: 0,
+          pickViewedCount: 0,
+          vodWatchedCount: 0,
+          vodWatchSeconds: 0,
+        })
+      }
+      const s = map.get(key)
+      if (e.eventType === 'career_test_completed') s.careerTestCount += 1
+      if (e.eventType === 'mentor_question_submitted') {
+        s.mentorQuestionCount += 1
+        if (e.meta?.answered === true) s.mentorAnsweredCount += 1
+      }
+      if (e.eventType === 'pick_viewed') s.pickViewedCount += 1
+      if (e.eventType === 'vod_watched_completed') {
+        s.vodWatchedCount += 1
+        s.vodWatchSeconds += Number(e.durationSeconds || 0)
+      }
+    })
+
+    const rows = Array.from(map.values()).sort((a, b) => (a.month || '').localeCompare(b.month || ''))
+    downloadCsv(`institution-monthly-activity-${institution?.institutionCode || 'unknown'}.csv`, rows)
+  }
 
   const getTraitAvgFromHistory = (h: HistoryEntry): number | null => {
     const r = h.result
@@ -344,6 +555,61 @@ export default function InstitutionDashboardPage() {
           </div>
         </div>
 
+        {/* 기능별 트래킹 */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">기능별 트래킹</h2>
+              <p className="text-xs text-slate-500 mt-1">AI 진로검사 / 멘토 질문 / Pick / VOD 활동 집계</p>
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={exportMonthlySummaryCsv}
+                disabled={!featureEvents.length}
+                className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              >
+                월별 활동 엑셀(CSV)
+              </button>
+              <button
+                type="button"
+                onClick={exportStudentSummaryCsv}
+                disabled={!featureEvents.length}
+                className="px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              >
+                학생별 활동 엑셀(CSV)
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
+              <p className="text-xs font-semibold text-slate-600">AI 진로검사</p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">{featureTotals.careerTestCount}</p>
+            </div>
+            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
+              <p className="text-xs font-semibold text-slate-600">멘토 질문</p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">{featureTotals.mentorQuestionCount}</p>
+              <p className="text-[11px] text-slate-500 mt-1">답변 완료 {featureTotals.mentorAnsweredCount}건</p>
+            </div>
+            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
+              <p className="text-xs font-semibold text-slate-600">Pick 열람</p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">{featureTotals.pickViewedCount}</p>
+            </div>
+            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
+              <p className="text-xs font-semibold text-slate-600">VOD</p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">{featureTotals.vodWatchedCount}</p>
+              <p className="text-[11px] text-slate-500 mt-1">시청 {Math.round(featureTotals.vodWatchSeconds / 60)}분</p>
+            </div>
+          </div>
+
+          {featureLoading && <p className="text-xs text-slate-500 mt-3">기능 활동을 불러오는 중입니다...</p>}
+          {!featureLoading && !featureEvents.length && (
+            <p className="text-xs text-slate-500 mt-3">아직 기능 활동 데이터가 없습니다. 학생이 각 모듈을 이용하면 집계됩니다.</p>
+          )}
+        </div>
+
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
           <h2 className="text-sm font-bold text-slate-900 mb-3">학생별 참여 현황</h2>
           {aggregated.students.length === 0 ? (
@@ -419,6 +685,63 @@ export default function InstitutionDashboardPage() {
                   닫기
                 </button>
               </div>
+            </div>
+
+            {/* 학생별 기능 활동 */}
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">학생 기능 활동</h3>
+                  <p className="text-xs text-slate-500 mt-1">{selectedStudentSummary.name} · 최근 기록</p>
+                </div>
+                <div className="text-xs text-slate-600">
+                  {selectedStudentFeatureEvents.length}건
+                </div>
+              </div>
+
+              {selectedStudentFeatureEvents.length === 0 ? (
+                <p className="text-sm text-slate-600">아직 이 학생의 기능 활동 데이터가 없습니다.</p>
+              ) : (
+                <div className="space-y-2">
+                  {selectedStudentFeatureEvents.slice(0, 10).map((e) => (
+                    <div
+                      key={`${e.id || e.occurredAt}-${e.eventType}`}
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-slate-900 truncate">
+                          {e.eventType === 'career_test_completed'
+                            ? 'AI 진로검사'
+                            : e.eventType === 'mentor_question_submitted'
+                              ? '멘토 질문'
+                              : e.eventType === 'pick_viewed'
+                                ? 'Pick 열람'
+                                : 'VOD 시청'}
+                        </p>
+                        <p className="text-[11px] text-slate-500 mt-1 truncate">
+                          {new Date(e.occurredAt).toLocaleString()}
+                        </p>
+                      </div>
+                      {e.eventType === 'vod_watched_completed' ? (
+                        <p className="text-xs font-bold text-indigo-700 whitespace-nowrap">
+                          {Math.round(Number(e.durationSeconds || 0) / 60)}분
+                        </p>
+                      ) : e.eventType === 'mentor_question_submitted' ? (
+                        <div className="flex flex-col sm:items-end">
+                          <p className="text-xs font-bold text-indigo-700 whitespace-nowrap">
+                            답변 {e.meta?.answered === true ? '완료' : '대기'}
+                          </p>
+                          {e.meta?.domain && (
+                            <p className="text-[11px] text-slate-500 whitespace-nowrap">{e.meta.domain}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-xs font-bold text-indigo-700 whitespace-nowrap">기록 있음</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">

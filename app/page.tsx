@@ -80,20 +80,20 @@ export default function HomePage() {
                 AI가 피드백하는 실무 <span className="whitespace-nowrap">시뮬레이션</span>
               </span>
             </h1>
-            <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mb-8 leading-relaxed mx-auto lg:mx-0">
+            <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mb-8 sm:mb-10 leading-relaxed mx-auto lg:mx-0">
               PM, 데이터, 마케팅 실무를 미리 경험하고, 당신의 커리어 적합도를 확인하세요.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center lg:justify-start w-full max-w-xl mx-auto lg:mx-0 lg:max-w-none">
               <Link
                 href="/simulation"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-500 transition-all shadow-md hover:shadow-lg"
+                className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto sm:min-w-[12rem] bg-indigo-600 text-white text-sm sm:text-base font-bold rounded-2xl hover:bg-indigo-500 transition-all shadow-md hover:shadow-lg text-center"
               >
                 지금 바로 시뮬레이션 시작하기
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-5 h-5 shrink-0" />
               </Link>
               <Link
                 href="/about"
-                className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-white text-slate-800 font-semibold rounded-2xl border border-slate-200 hover:border-indigo-200 hover:text-indigo-700 hover:shadow-md transition-all"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 sm:py-4 w-full sm:w-auto sm:min-w-[12rem] bg-white text-slate-800 text-sm sm:text-base font-semibold rounded-2xl border border-slate-200 hover:border-indigo-200 hover:text-indigo-700 hover:shadow-md transition-all text-center"
               >
                 대학/기업용 서비스 보기
               </Link>
@@ -101,22 +101,22 @@ export default function HomePage() {
           </div>
 
           {/* 대학/기업용 대시보드 프리뷰 */}
-          <div className="relative">
+          <div className="relative w-full min-w-0">
             <div className="rounded-3xl bg-white/80 backdrop-blur border border-slate-200/80 shadow-xl shadow-slate-200 overflow-hidden p-4 sm:p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4 pb-1 border-b border-slate-100/80">
+                <div className="min-w-0 pr-2">
                   <p className="text-xs font-semibold text-indigo-600 uppercase tracking-widest">
                     대학/기업용 대시보드
                   </p>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] sm:text-xs text-slate-500 mt-1 leading-snug">
                     우리 대학 학생들의 실무 역량을 데이터로 관리하세요.
                   </p>
                 </div>
-                <span className="px-2 py-1 rounded-full bg-emerald-50 text-[10px] font-semibold text-emerald-700 border border-emerald-100">
+                <span className="self-start sm:self-center shrink-0 px-2.5 py-1 rounded-full bg-emerald-50 text-[10px] font-semibold text-emerald-700 border border-emerald-100 whitespace-nowrap">
                   Live
                 </span>
               </div>
-              <div className="h-40 sm:h-48 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 flex items-center justify-center text-slate-200 text-xs sm:text-sm">
+              <div className="h-40 sm:h-48 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 flex items-center justify-center text-slate-200 text-xs sm:text-sm mt-1">
                 <div className="w-full max-w-xs space-y-2">
                   <div className="flex justify-between text-[10px] text-slate-300 mb-2">
                     <span>직무별 준비도 분포</span>
@@ -149,17 +149,17 @@ export default function HomePage() {
       {profile && (
         <section className="py-6 sm:py-8 bg-[#F8FAFC] w-full">
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
-            <div className="bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl transition-all p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
+            <div className="bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl transition-all p-5 sm:p-6 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 lg:gap-6">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-indigo-600 uppercase tracking-widest mb-1">
                   Personalized for You
                 </p>
-                <h2 className="text-sm sm:text-base font-semibold text-slate-900 mb-1">
+                <h2 className="text-sm sm:text-base font-semibold text-slate-900 mb-1 break-words">
                   {profile.major
                     ? `${profile.major} 전공인 ${profile.name}님을 위한 맞춤 시뮬레이션`
                     : `${profile.name}님을 위한 맞춤 시뮬레이션`}
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500">
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
                   {profile.interests && profile.interests.length > 0
                     ? `${profile.interests.join(', ')} 직무 중심의 리허설 과제를 먼저 추천해 드립니다.`
                     : '온보딩에서 선택하신 배경을 기반으로, 가장 잘 맞는 직무 리허설을 제안해 드립니다.'}
@@ -167,10 +167,10 @@ export default function HomePage() {
               </div>
               <Link
                 href="/simulation"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-slate-900 text-white text-xs sm:text-sm font-semibold hover:bg-slate-800 shadow-sm hover:shadow-md transition-all"
+                className="inline-flex items-center justify-center gap-1.5 px-5 py-3 w-full lg:w-auto lg:shrink-0 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
               >
                 맞춤 시뮬레이션 보러가기
-                <ArrowRight className="w-4 h-4 ml-1" />
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </Link>
             </div>
           </div>
@@ -180,9 +180,9 @@ export default function HomePage() {
       {/* Why Us - 특징 세션 */}
       <section className="py-16 sm:py-24 bg-[#F8FAFC] w-full">
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
-          <div className="max-w-5xl mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#1E293B] mb-4">Why Us?</h2>
-            <p className="text-slate-600 mb-12 max-w-5xl mx-auto text-center leading-relaxed">
+          <div className="max-w-5xl mx-auto text-center mb-10 sm:mb-14">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#1E293B] mb-3 sm:mb-4">Why Us?</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto text-center leading-relaxed text-sm sm:text-base px-1">
               데이터와 AI로 설계된 실무 시뮬레이션으로, 당신의 역량을 객관적으로 점검합니다.
             </p>
           </div>

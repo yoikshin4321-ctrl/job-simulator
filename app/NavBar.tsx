@@ -214,15 +214,15 @@ export default function NavBar() {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200/80 shadow-sm w-full">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 min-h-16 flex flex-col">
-        <div className="h-16 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
+        <div className="min-h-16 flex items-center justify-between gap-3 py-2 sm:py-0">
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1">
             <Link
               href="/"
               className="text-lg font-bold text-indigo-600 hover:text-indigo-700 transition-colors tracking-tight flex-shrink-0"
             >
               JOB-EX
             </Link>
-            <nav className="hidden md:flex items-center gap-1" aria-label="주요 메뉴">
+            <nav className="hidden md:flex items-center gap-1 flex-wrap" aria-label="주요 메뉴">
               {NAV_ITEMS.map(({ href, label, match }) => (
                 <Link key={href} href={href} className={linkClass(match)}>
                   {label}
@@ -231,52 +231,42 @@ export default function NavBar() {
             </nav>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <button
-              type="button"
-              className="md:hidden inline-flex items-center justify-center p-2 rounded-xl text-slate-700 hover:bg-slate-100 border border-slate-200/80"
-              aria-expanded={menuOpen}
-              aria-controls="mobile-nav"
-              aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
-              onClick={() => setMenuOpen((o) => !o)}
-            >
-              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-
+          {/* md 이상: 헤더에 인증 UI (flex-wrap으로 좁은 태블릿도 겹침 방지) */}
+          <div className="hidden md:flex items-center flex-wrap justify-end gap-x-2 gap-y-2 min-w-0 max-w-[min(100%,22rem)] lg:max-w-none">
             {currentInstitution ? (
               <>
-                <span className="hidden sm:inline text-xs text-slate-500 truncate max-w-[140px]">
+                <span className="text-xs text-slate-500 truncate max-w-[8rem] lg:max-w-[10rem]">
                   {currentInstitution.institutionName || '기관'} 기관 관리자
                 </span>
                 <Link
                   href="/institution/dashboard"
-                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                  className="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors whitespace-nowrap shrink-0"
                 >
                   대시보드
                 </Link>
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-slate-800 hover:bg-slate-900 transition-colors"
+                  className="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-slate-800 hover:bg-slate-900 transition-colors whitespace-nowrap shrink-0"
                 >
                   로그아웃
                 </button>
               </>
             ) : currentUser ? (
               <>
-                <span className="hidden sm:inline text-xs text-slate-500 truncate max-w-[120px]">
+                <span className="text-xs text-slate-500 truncate max-w-[6rem] lg:max-w-[9rem]" title={currentUser.name || currentUser.email}>
                   {currentUser.name || currentUser.email} 님
                 </span>
                 <Link
                   href="/my"
-                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                  className="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors whitespace-nowrap shrink-0"
                 >
                   내 정보
                 </Link>
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-slate-800 hover:bg-slate-900 transition-colors"
+                  className="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-slate-800 hover:bg-slate-900 transition-colors whitespace-nowrap shrink-0"
                 >
                   로그아웃
                 </button>
@@ -285,19 +275,30 @@ export default function NavBar() {
               <>
                 <Link
                   href="/login"
-                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors"
+                  className="px-3 py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors whitespace-nowrap shrink-0"
                 >
                   로그인
                 </Link>
                 <Link
                   href="/signup"
-                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors"
+                  className="px-3 py-2 text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors whitespace-nowrap shrink-0"
                 >
                   회원가입
                 </Link>
               </>
             )}
           </div>
+
+          <button
+            type="button"
+            className="md:hidden inline-flex items-center justify-center p-2 rounded-xl text-slate-700 hover:bg-slate-100 border border-slate-200/80 shrink-0"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
+            aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
 
         {menuOpen && (
@@ -312,6 +313,70 @@ export default function NavBar() {
                 </Link>
               ))}
             </nav>
+            <div className="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-2">
+              {currentInstitution ? (
+                <>
+                  <p className="px-4 text-xs text-slate-500">
+                    {currentInstitution.institutionName || '기관'} 기관 관리자
+                  </p>
+                  <Link
+                    href="/institution/dashboard"
+                    className="mx-2 inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-indigo-600"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    대시보드
+                  </Link>
+                  <button
+                    type="button"
+                    className="mx-2 inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-slate-800"
+                    onClick={() => {
+                      setMenuOpen(false)
+                      handleLogout()
+                    }}
+                  >
+                    로그아웃
+                  </button>
+                </>
+              ) : currentUser ? (
+                <>
+                  <p className="px-4 text-xs font-medium text-slate-600">{currentUser.name || currentUser.email} 님</p>
+                  <Link
+                    href="/my"
+                    className="mx-2 inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-indigo-600"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    내 정보
+                  </Link>
+                  <button
+                    type="button"
+                    className="mx-2 inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-slate-800"
+                    onClick={() => {
+                      setMenuOpen(false)
+                      handleLogout()
+                    }}
+                  >
+                    로그아웃
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="mx-2 inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-medium text-slate-700 border border-slate-200"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    로그인
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="mx-2 inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-indigo-600"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    회원가입
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
